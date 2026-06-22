@@ -26,7 +26,7 @@ const BLOB = `https://${_storeId ? `${_storeId.toLowerCase()}.public.blob.vercel
 // No remote origins. StatiCrypt decrypts via WebCrypto (no eval/new Function), so
 // 'unsafe-eval' is NOT granted. 'unsafe-inline' for scripts is unavoidable: the
 // decrypt routine ships as an inline <script>. Drops live on the isolated
-// hushdrop.maxtechera.dev subdomain, so inline-script risk can't reach the main site.
+// hushdrop.dev subdomain, so inline-script risk can't reach the main site.
 const CSP =
   "default-src 'self' data: blob:; " +
   "script-src 'unsafe-inline'; " +

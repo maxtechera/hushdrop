@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
   "name": "io.github.maxtechera/hushdrop",
   "description": "Open-source artifact sharing — publish HTML, Markdown, or files as branded, password-protected (zero-knowledge AES-256) links on your own domain, from any AI agent. The open-source, self-hosted alternative to Stacktree.",
-  "version": "0.3.1",
-  "homepage": "https://hushdrop.maxtechera.dev",
+  "version": "0.3.2",
+  "homepage": "https://hushdrop.dev",
   "repository": {
     "url": "https://github.com/maxtechera/hushdrop",
     "source": "github"
@@ -12,7 +12,7 @@
     {
       "registry_name": "npm",
       "name": "hushdrop-mcp",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "runtime_hint": "npx",
       "environment_variables": [
         {

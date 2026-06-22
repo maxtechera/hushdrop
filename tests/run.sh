@@ -4,7 +4,7 @@
 # Exit non-zero if any non-SKIP fails.
 #
 # Env:
-#   BASE_URL=https://hushdrop.maxtechera.dev   site under test
+#   BASE_URL=https://hushdrop.dev   site under test
 #   DROP_REPO=/home/max/dev/drops-share      checkout with skill/node_modules + token
 #   NET_TIMEOUT=60                           per-call timeout (s)
 #   RUN_RATELIMIT=1                          run the 21-upload A1.6 burst (consumes anon quota)
@@ -14,7 +14,7 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export RESULT_FILE="$(mktemp)"
 export RUN_SUITE=1
 : > "$RESULT_FILE"
-: "${BASE_URL:=https://hushdrop.maxtechera.dev}"; export BASE_URL
+: "${BASE_URL:=https://hushdrop.dev}"; export BASE_URL
 : "${DROP_REPO:=/home/max/dev/drops-share}"; export DROP_REPO
 : "${NET_TIMEOUT:=60}"; export NET_TIMEOUT
 

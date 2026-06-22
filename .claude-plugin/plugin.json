@@ -3,6 +3,6 @@
   "version": "0.3.0",
   "description": "Publish/share an artifact (HTML, Markdown, PDF, file, or whole site) as a private, branded, password-protected link on your own domain — from Claude. Zero-knowledge AES-256.",
   "author": { "name": "Max Techera", "url": "https://maxtechera.dev" },
-  "homepage": "https://hushdrop.maxtechera.dev",
+  "homepage": "https://hushdrop.dev",
   "license": "MIT"
 }

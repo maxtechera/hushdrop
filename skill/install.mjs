@@ -93,4 +93,4 @@ if (existsSync(skillsDir) && !PUBLISHED) {
 
 console.log("\nGUI clients not auto-detected? Add this to your MCP config:");
 console.log(JSON.stringify({ mcpServers: { hushdrop: { command: MCP_CMD[0], args: MCP_CMD.slice(1) } } }, null, 2));
-console.log("\nReady. Try:  hush report.html --managed   (zero setup)   ·   docs: https://hushdrop.maxtechera.dev/docs");
+console.log("\nReady. Try:  hush report.html --managed   (zero setup)   ·   docs: https://hushdrop.dev/docs");

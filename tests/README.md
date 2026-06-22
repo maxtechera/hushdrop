@@ -25,7 +25,7 @@ throwaway managed drops that auto-expire in 24h).
 
 | Var | Default | Meaning |
 |---|---|---|
-| `BASE_URL` | `https://hushdrop.maxtechera.dev` | site under test |
+| `BASE_URL` | `https://hushdrop.dev` | site under test |
 | `DROP_REPO` | `/home/max/dev/drops-share` | checkout with `skill/node_modules` + blob token (CLI/MCP run from here) |
 | `NET_TIMEOUT` | `60` | per-call timeout (seconds) |
 | `RUN_RATELIMIT` | unset | set `=1` to run the real 21-upload A1.6 burst (consumes the day's anon quota) |

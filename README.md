@@ -14,7 +14,7 @@ from your terminal or any AI agent. The open-source alternative to Stacktree.
 [![license: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![stars](https://img.shields.io/github/stars/maxtechera/hushdrop?style=social)](https://github.com/maxtechera/hushdrop/stargazers)
 
-[**Live demo →**](https://hushdrop.maxtechera.dev) · [Docs](https://hushdrop.maxtechera.dev/docs) · [Try in browser](https://hushdrop.maxtechera.dev/try) · [vs Stacktree](https://hushdrop.maxtechera.dev/stacktree-alternative)
+[**Live demo →**](https://hushdrop.dev) · [Docs](https://hushdrop.dev/docs) · [Try in browser](https://hushdrop.dev/try) · [vs Stacktree](https://hushdrop.dev/stacktree-alternative)
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmaxtechera%2Fhushdrop&stores=%5B%7B%22type%22%3A%22blob%22%7D%5D)
 
@@ -41,19 +41,19 @@ The core way to use Hushdrop is **from your agent** — it publishes what it bui
 npx skills add maxtechera/hushdrop
 ```
 
-**No install** — open **[hushdrop.maxtechera.dev/try](https://hushdrop.maxtechera.dev/try)**, drop an HTML file, get a link. No account.
+**No install** — open **[hushdrop.dev/try](https://hushdrop.dev/try)**, drop an HTML file, get a link. No account.
 
 **One-off from the terminal** — zero install, zero setup, no account:
 
 ```bash
-npx hushdrop report.html       # → https://hushdrop.maxtechera.dev/u/xxxx (+ password, copied) — no setup, no account
+npx hushdrop report.html       # → https://hushdrop.dev/u/xxxx (+ password, copied) — no setup, no account
 ```
 
-**Free hosted account** — persistent links on your own handle (`hushdrop.maxtechera.dev/you/<slug>`):
+**Free hosted account** — persistent links on your own handle (`hushdrop.dev/you/<slug>`):
 
 ```bash
 npx hushdrop login                       # passwordless: GitHub or magic link
-npx hushdrop report.html                 # → https://hushdrop.maxtechera.dev/you/report-a1b2 (persistent)
+npx hushdrop report.html                 # → https://hushdrop.dev/you/report-a1b2 (persistent)
 ```
 
 **Your own domain** — self-host on your Vercel Blob (free, MIT, your URL + brand forever):
@@ -90,7 +90,7 @@ terminal-native, zero-knowledge, on your own domain, usable from any agent. MIT.
 | Burn-after-read / email-gate | ✅ | ✅ | partial | ❌ |
 | Price | **free / self-host** | paid | freemium | freemium |
 
-Full write-ups: [vs Stacktree](https://hushdrop.maxtechera.dev/stacktree-alternative) · [vs Send](https://hushdrop.maxtechera.dev/send-co-alternative) · [vs ShareDuo](https://hushdrop.maxtechera.dev/shareduo-alternative)
+Full write-ups: [vs Stacktree](https://hushdrop.dev/stacktree-alternative) · [vs Send](https://hushdrop.dev/send-co-alternative) · [vs ShareDuo](https://hushdrop.dev/shareduo-alternative)
 
 ## Features
 
@@ -184,9 +184,9 @@ share.yoursite.com` to point your CLI + agents at your instance. Self-host is **
 ## FAQ
 
 **Is it really zero-knowledge?** Yes — for locked drops, AES-256 runs in your browser before upload; the server stores only ciphertext.
-**Managed vs. hosted vs. self-host?** Managed = anonymous, 24h, no account. Hosted = free account, persistent links on `hushdrop.maxtechera.dev/you/…`. Self-host = your own domain + Blob.
+**Managed vs. hosted vs. self-host?** Managed = anonymous, 24h, no account. Hosted = free account, persistent links on `hushdrop.dev/you/…`. Self-host = your own domain + Blob.
 **Does it need Vercel?** Only to self-host. The managed + hosted tiers need nothing but `npx`.
-**How is this different from Stacktree?** Same agent-native idea, but open-source, self-hostable, your own domain free, zero-knowledge. See [the comparison](https://hushdrop.maxtechera.dev/stacktree-alternative).
+**How is this different from Stacktree?** Same agent-native idea, but open-source, self-hostable, your own domain free, zero-knowledge. See [the comparison](https://hushdrop.dev/stacktree-alternative).
 **Can agents use it without MCP?** Yes — it's a single CLI; any agent that runs a shell command can publish.
 **Is it free?** Yes. MIT. Self-host costs only your own (usually pennies) Vercel Blob usage.
 
@@ -204,6 +204,6 @@ PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). It's a few hundred lines
 
 <div align="center">
 
-MIT · Built by [**Max Techera**](https://maxtechera.dev) · [GitHub](https://github.com/maxtechera) · [Instagram](https://instagram.com/maxtechera) · [hushdrop.maxtechera.dev](https://hushdrop.maxtechera.dev)
+MIT · Built by [**Max Techera**](https://maxtechera.dev) · [GitHub](https://github.com/maxtechera) · [Instagram](https://instagram.com/maxtechera) · [hushdrop.dev](https://hushdrop.dev)
 
 </div>

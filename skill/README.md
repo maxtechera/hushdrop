@@ -4,14 +4,14 @@
 zero-knowledge links on your own domain, from any AI agent.** CLI + MCP server. The open-source,
 self-hosted [Stacktree](https://stacktr.ee) alternative.
 
-→ Site & docs: **[hushdrop.maxtechera.dev](https://hushdrop.maxtechera.dev)** · Source: [github.com/maxtechera/hushdrop](https://github.com/maxtechera/hushdrop)
+→ Site & docs: **[hushdrop.dev](https://hushdrop.dev)** · Source: [github.com/maxtechera/hushdrop](https://github.com/maxtechera/hushdrop)
 
 ## Install
 
 ```bash
 npx hushdrop-install            # wire the MCP into Claude Code / Codex / Cursor / OpenCode
 # or one-line installer:
-curl -fsSL https://hushdrop.maxtechera.dev/install.sh | sh
+curl -fsSL https://hushdrop.dev/install.sh | sh
 ```
 
 ## Use

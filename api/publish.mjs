@@ -85,14 +85,14 @@ export default async function handler(req, res) {
   // Web uploads (x-drop-brand) aren't pre-branded by the CLI — inject a minimal badge + favicon.
   if (req.headers["x-drop-brand"] && /^text\/html/i.test(ct)) {
     let html = body.toString("utf8");
-    const badge = `<a href="https://hushdrop.maxtechera.dev" target="_blank" rel="noopener" style="position:fixed;right:14px;bottom:14px;z-index:2147483646;padding:7px 12px;border-radius:999px;text-decoration:none;font:600 12px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#fff;background:rgba(20,20,22,.62);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(12px)">hushdrop.maxtechera.dev</a>`;
-    const meta = `<link rel="icon" href="https://hushdrop.maxtechera.dev/_brand/favicon.png"/><meta name="theme-color" content="#ff6b35"/>`;
+    const badge = `<a href="https://hushdrop.dev" target="_blank" rel="noopener" style="position:fixed;right:14px;bottom:14px;z-index:2147483646;padding:7px 12px;border-radius:999px;text-decoration:none;font:600 12px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#fff;background:rgba(20,20,22,.62);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(12px)">hushdrop.dev</a>`;
+    const meta = `<link rel="icon" href="https://hushdrop.dev/_brand/favicon.png"/><meta name="theme-color" content="#ff6b35"/>`;
     html = /<\/head>/i.test(html) ? html.replace(/<\/head>/i, `${meta}</head>`) : meta + html;
     html = /<\/body>/i.test(html) ? html.replace(/<\/body>/i, `${badge}</body>`) : html + badge;
     body = Buffer.from(html, "utf8");
   }
 
-  const host = req.headers["x-forwarded-host"] || req.headers.host || "hushdrop.maxtechera.dev";
+  const host = req.headers["x-forwarded-host"] || req.headers.host || "hushdrop.dev";
 
   // ---- Hosted tier: persistent <handle>/<slug> + sites row + quota ----
   if (hosted) {

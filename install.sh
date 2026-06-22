@@ -1,6 +1,6 @@
 #!/bin/sh
 # hushdrop installer — one command to get the `hush` CLI + MCP wired into your agents.
-#   curl -fsSL https://hushdrop.maxtechera.dev/install.sh | sh
+#   curl -fsSL https://hushdrop.dev/install.sh | sh
 #
 # Open-source, self-hosted artifact sharing. After this, try:  hush yourfile.html --managed
 set -e
@@ -40,5 +40,5 @@ node "$DIR/skill/install.mjs" >/dev/null 2>&1 || true
 
 printf '\n'
 say "ready"
-dim "  hush report.html --managed        # zero-setup, publishes to hushdrop.maxtechera.dev"
+dim "  hush report.html --managed        # zero-setup, publishes to hushdrop.dev"
 dim "  hush init --domain share.you.com  # then 'hush deploy' to run on your own domain"

@@ -6,23 +6,23 @@
 // publishing, use the local `hush` CLI or `npx -y hushdrop-mcp` — those encrypt before upload.)
 //
 // Stateless Streamable HTTP MCP (one server+transport per request) — fits Vercel functions.
-// Connector URL: https://hushdrop.maxtechera.dev/api/mcp  (also /mcp via rewrite)
+// Connector URL: https://hushdrop.dev/api/mcp  (also /mcp via rewrite)
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
 
-const ORIGIN = "https://hushdrop.maxtechera.dev";
+const ORIGIN = "https://hushdrop.dev";
 
 function buildServer() {
   const server = new McpServer(
     { name: "hushdrop", version: "0.3.1" },
-    { instructions: "Publish HTML artifacts as shareable links on hushdrop.maxtechera.dev. Use publish_html whenever the user wants to share, publish, or get a link for HTML you created." }
+    { instructions: "Publish HTML artifacts as shareable links on hushdrop.dev. Use publish_html whenever the user wants to share, publish, or get a link for HTML you created." }
   );
 
   server.tool(
     "publish_html",
-    "Publish an HTML document/artifact as a public, branded link on hushdrop.maxtechera.dev (auto-deletes in 24h). Returns the URL. Use when the user wants to share/publish/host an HTML page you generated, or asks for a link to it.",
+    "Publish an HTML document/artifact as a public, branded link on hushdrop.dev (auto-deletes in 24h). Returns the URL. Use when the user wants to share/publish/host an HTML page you generated, or asks for a link to it.",
     { html: z.string().describe("The complete HTML document to publish (include <html>…</html>).") },
     async ({ html }) => {
       try {

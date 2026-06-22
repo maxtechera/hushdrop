@@ -5,7 +5,7 @@
  * Open-source artifact sharing: drop a file (HTML, PDF, zip, anything) and get a
  * clean, optionally password-locked URL on YOUR domain in ~1s. Bring your own
  * Vercel Blob store + domain via `hush init`; the defaults point at the public
- * hushdrop.maxtechera.dev example deployment.
+ * hushdrop.dev example deployment.
  *
  * Pipeline (HTML): inject <head> branding/OG + corner badge → (optional) StatiCrypt
  *                  with branded gate → upload to Vercel Blob → clean URL + password.
@@ -27,11 +27,11 @@ const DROP_HOME = join(homedir(), ".hushdrop");
 const MANIFEST = join(DROP_HOME, "manifest.json");
 const CONFIG_FILE = join(DROP_HOME, "config.json");
 
-// Default deployment = the public hushdrop.maxtechera.dev example. These are NOT secrets
+// Default deployment = the public hushdrop.dev example. These are NOT secrets
 // (the blob host + project id are already public in vercel.json / the Vercel dashboard).
 // Run `hush init` to point hush at your OWN domain + Vercel Blob store instead.
 const DEFAULTS = {
-  domain: "hushdrop.maxtechera.dev",
+  domain: "hushdrop.dev",
   blobHost: "opzwhnf3xlqxnotd.public.blob.vercel-storage.com",
   projectId: "prj_c7Yb2JKRvlBduAXyjiWfWEb9ZT9L",
   orgId: "team_3dkH4OzC7klByvov3hsB7J40",

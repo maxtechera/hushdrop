@@ -8,4 +8,4 @@
 `hushdrop-cli` is a legacy alias and is no longer advertised. It still works (it re-exports the
 `hush` CLI from `hushdrop-mcp`), but new installs should use `hushdrop`.
 
-Open-source · self-hosted · MIT. Site & docs: https://hushdrop.maxtechera.dev
+Open-source · self-hosted · MIT. Site & docs: https://hushdrop.dev

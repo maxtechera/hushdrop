@@ -8,4 +8,4 @@ npx hushdrop report.html --managed   # zero-setup: publish to the managed tier (
 npx hushdrop report.html             # your own domain (after `hush init` + `hush deploy`)
 ```
 
-Open-source · self-hosted · MIT. Site & docs: https://hushdrop.maxtechera.dev
+Open-source · self-hosted · MIT. Site & docs: https://hushdrop.dev

@@ -20,7 +20,7 @@ export default async function handler(req, res) {
   const params = new URL(req.url, "http://x").searchParams;
   const code = params.get("code");
   const clientId = process.env.VERCEL_CLIENT_ID, clientSecret = process.env.VERCEL_CLIENT_SECRET;
-  const host = req.headers["x-forwarded-host"] || req.headers.host || "hushdrop.maxtechera.dev";
+  const host = req.headers["x-forwarded-host"] || req.headers.host || "hushdrop.dev";
 
   if (!clientId || !clientSecret) {
     return res.status(200).send(page("Almost there", `<h1>Connect-Vercel isn't enabled here yet</h1>

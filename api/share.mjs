@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   const user = await userFromKey(bearer(req));
   if (!user) return res.status(401).json({ error: "not authenticated" });
   const db = admin();
-  const host = req.headers["x-forwarded-host"] || req.headers.host || "hushdrop.maxtechera.dev";
+  const host = req.headers["x-forwarded-host"] || req.headers.host || "hushdrop.dev";
   let body = {};
   try { body = typeof req.body === "object" && req.body ? req.body : JSON.parse(req.body || "{}"); } catch {}
   const slug = String(body.slug || "").trim();

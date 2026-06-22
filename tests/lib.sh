@@ -19,7 +19,7 @@ DROP_CLI="$DROP_REPO/skill/drop.mjs"
 DROP_MCP="$DROP_REPO/skill/mcp.mjs"
 
 # Public site under test.
-: "${BASE_URL:=https://hushdrop.maxtechera.dev}"
+: "${BASE_URL:=https://hushdrop.dev}"
 
 # Per-test timeout for network/CLI calls (seconds).
 : "${NET_TIMEOUT:=60}"

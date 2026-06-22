@@ -1,6 +1,6 @@
 {
   "name": "hushdrop",
-  "owner": { "name": "Max Techera", "url": "https://hushdrop.maxtechera.dev" },
+  "owner": { "name": "Max Techera", "url": "https://hushdrop.dev" },
   "plugins": [
     {
       "name": "hushdrop",
