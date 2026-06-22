@@ -1,0 +1,42 @@
+{
+  "name": "hushdrop-cli",
+  "version": "0.3.0",
+  "description": "Share anything as a branded, password-protected, zero-knowledge link on your own domain \u2014 one command, from any terminal or AI agent. Open-source, self-hosted, or zero-setup managed.",
+  "type": "module",
+  "bin": {
+    "hush": "./drop.mjs",
+    "hushdrop": "./drop.mjs"
+  },
+  "files": [
+    "drop.mjs"
+  ],
+  "keywords": [
+    "cli",
+    "share",
+    "artifacts",
+    "ai-agents",
+    "claude",
+    "zero-knowledge",
+    "self-hosted",
+    "mcp-server",
+    "claude-code",
+    "cursor",
+    "anthropic",
+    "stacktree-alternative",
+    "artifact-sharing",
+    "send-co-alternative"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/maxtechera/hushdrop"
+  },
+  "homepage": "https://hushdrop.maxtechera.dev",
+  "author": "Max Techera (https://maxtechera.dev)",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "hushdrop-mcp": "^0.3.0"
+  }
+}

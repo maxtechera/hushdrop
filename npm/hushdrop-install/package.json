@@ -1,0 +1,38 @@
+{
+  "name": "hushdrop-install",
+  "version": "0.3.0",
+  "description": "One command to wire the hushdrop MCP server (open-source artifact sharing) into your AI agents — Claude Code, Codex, Cursor, OpenCode.",
+  "type": "module",
+  "bin": {
+    "hushdrop-install": "./index.mjs"
+  },
+  "files": [
+    "index.mjs"
+  ],
+  "keywords": [
+    "mcp",
+    "ai-agents",
+    "claude-code",
+    "installer",
+    "drops",
+    "mcp-server",
+    "cursor",
+    "anthropic",
+    "stacktree-alternative",
+    "artifact-sharing",
+    "send-co-alternative"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/maxtechera/hushdrop"
+  },
+  "homepage": "https://hushdrop.maxtechera.dev",
+  "author": "Max Techera (https://maxtechera.dev)",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "hushdrop-mcp": "^0.3.0"
+  }
+}

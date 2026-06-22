@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/install", "destination": "/install.sh" },
+    { "source": "/u/:slug(burn-[A-Za-z0-9-]+)", "destination": "/api/burn?slug=:slug" },
+    { "source": "/s/:t([a-f0-9]+)", "destination": "/api/s?t=:t" }
+  ],
+  "crons": [
+    { "path": "/api/gc", "schedule": "0 3 * * *" }
+  ]
+}

@@ -1,0 +1,19 @@
+.vercel
+.env*.local
+
+# skill: deps auto-installed on first run, local config/token
+node_modules/
+skill/node_modules/
+skill/package-lock.json
+.hushdrop/
+
+# stray staticrypt working artifact
+.staticrypt.json
+.claude/worktrees/
+
+# supabase CLI scratch
+supabase/.temp/
+.env.harness
+
+# stray headless-chrome crash output (bad LOCALAPPDATA under WSL)
+undefined:/

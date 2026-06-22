@@ -1,0 +1,19 @@
+name: Bug report
+description: Something isn't working
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes: { label: What happened?, description: What you expected vs. what occurred. }
+    validations: { required: true }
+  - type: input
+    id: repro
+    attributes: { label: Repro command, placeholder: "hush report.html --managed" }
+  - type: dropdown
+    id: tier
+    attributes:
+      label: Tier
+      options: [managed (anonymous), hosted (logged in), self-host]
+  - type: input
+    id: env
+    attributes: { label: OS + Node version, placeholder: "macOS 14 / node 20" }

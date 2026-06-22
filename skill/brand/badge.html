@@ -1,0 +1,15 @@
+<!-- drop: subtle corner badge (injected before </body>) -->
+<a id="drop-badge" href="https://__DROP_DOMAIN__" target="_blank" rel="noopener noreferrer"
+   style="position:fixed;right:14px;bottom:14px;z-index:2147483646;display:flex;align-items:center;gap:7px;
+          padding:7px 12px 7px 9px;border-radius:999px;text-decoration:none;
+          font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+          font-size:12px;font-weight:600;line-height:1;color:#fff;
+          background:rgba(20,20,22,0.62);border:1px solid rgba(255,255,255,0.14);
+          box-shadow:0 6px 22px -8px rgba(0,0,0,0.55);
+          -webkit-backdrop-filter:blur(12px) saturate(160%);backdrop-filter:blur(12px) saturate(160%);
+          transition:transform .12s ease,background .12s ease;"
+   onmouseover="this.style.transform='translateY(-1px)';this.style.background='rgba(20,20,22,0.78)'"
+   onmouseout="this.style.transform='none';this.style.background='rgba(20,20,22,0.62)'">
+  <span style="width:9px;height:9px;border-radius:50%;background:linear-gradient(135deg,#ff6b35,#ea580c);display:block;flex:0 0 auto;"></span>
+  <span style="opacity:.78;">__DROP_DOMAIN__</span>
+</a>

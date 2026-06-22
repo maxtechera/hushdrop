@@ -1,0 +1,13 @@
+{
+  "name": "Hushdrop",
+  "owner": "Max Techera",
+  "domain": "hushdrop.maxtechera.dev",
+  "tagline": "Share anything. Branded. On your own domain.",
+  "primaryColor": "#ff6b35",
+  "accentColor": "#ea580c",
+  "links": {
+    "website": "https://maxtechera.dev",
+    "github": "https://github.com/maxtechera",
+    "instagram": "https://instagram.com/maxtechera"
+  }
+}

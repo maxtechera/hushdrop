@@ -1,0 +1,27 @@
+name: CI
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Syntax-check CLI + MCP + edge + API
+        run: |
+          node --check skill/drop.mjs
+          node --check skill/mcp.mjs
+          node --check skill/install.mjs
+          node --check middleware.js
+          for f in $(find api -name '*.mjs'); do node --check "$f"; done
+      - name: Generated site is in sync
+        run: |
+          node skill/gen-site.mjs
+          git diff --exit-code -- '*.html' sitemap.xml llms.txt || (echo "::error::Run 'node skill/gen-site.mjs' and commit the result" && exit 1)

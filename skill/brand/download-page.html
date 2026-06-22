@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>__DROP_TITLE__</title>
+    __DROP_META__
+    <style>
+        :root {
+            --drop-primary: #ff6b35;
+            --drop-accent: #ea580c;
+        }
+        * { box-sizing: border-box; }
+        html, body { height: 100%; margin: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background:
+                radial-gradient(1200px 600px at 50% -10%, rgba(255, 107, 53, 0.22), transparent 60%),
+                radial-gradient(900px 500px at 90% 110%, rgba(234, 88, 12, 0.16), transparent 60%),
+                #0b0b0d;
+        }
+        .card {
+            width: 100%;
+            max-width: 440px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 36px 32px 30px;
+            text-align: center;
+            backdrop-filter: blur(18px) saturate(160%);
+            -webkit-backdrop-filter: blur(18px) saturate(160%);
+            box-shadow: 0 24px 70px -24px rgba(0, 0, 0, 0.7), inset 0 0.5px 0 rgba(255, 255, 255, 0.12);
+        }
+        .logo { display:flex; align-items:center; justify-content:center; gap:9px; margin-bottom:24px; font-weight:700; font-size:1.15rem; letter-spacing:-.01em; color:#fff; }
+        .logo .d { width:12px; height:12px; border-radius:50%; background:linear-gradient(135deg,#ff6b35,#ea580c); box-shadow:0 0 16px rgba(255,107,53,.6); }
+        h1 {
+            font-size: 1.35em;
+            font-weight: 650;
+            letter-spacing: -0.01em;
+            margin: 0 0 6px;
+            word-break: break-word;
+        }
+        .sub { color: rgba(245, 245, 245, 0.55); font-size: 0.9em; margin: 0 0 26px; }
+        .file {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-align: left;
+            background: rgba(0, 0, 0, 0.28);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 13px;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+        }
+        .file .ico {
+            flex: 0 0 auto;
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, var(--drop-primary), var(--drop-accent));
+            font-size: 18px;
+        }
+        .file .meta { min-width: 0; }
+        .file .name { font-weight: 600; font-size: 0.95em; overflow-wrap: anywhere; }
+        .file .size { color: rgba(245, 245, 245, 0.5); font-size: 0.82em; margin-top: 2px; }
+        .btn {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, var(--drop-primary), var(--drop-accent));
+            color: #fff;
+            text-decoration: none;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: 650;
+            font-size: 14px;
+            padding: 15px;
+            border-radius: 12px;
+            transition: filter 0.15s ease, transform 0.05s ease;
+        }
+        .btn:hover { filter: brightness(108%); }
+        .btn:active { transform: translateY(1px); }
+        .footer { margin: 22px 0 0; font-size: 0.78em; color: rgba(245, 245, 245, 0.4); }
+        .footer a { color: rgba(255, 107, 53, 0.85); text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo"><span class="d"></span>drop</div>
+        <h1>__DROP_TITLE__</h1>
+        <p class="sub">__DROP_SUBTITLE__</p>
+        <div class="file">
+            <div class="ico">↓</div>
+            <div class="meta">
+                <div class="name">__DROP_FILE_NAME__</div>
+                <div class="size">__DROP_FILE_SIZE__</div>
+            </div>
+        </div>
+        <a class="btn" href="__DROP_FILE_URL__" download>Download</a>
+        <p class="footer">Shared via <a href="https://__DROP_DOMAIN__">__DROP_DOMAIN__</a><br />
+          <span style="opacity:.8;">made by <a href="__DROP_WEBSITE__">__DROP_OWNER__</a> · <a href="__DROP_GITHUB__">github</a> · <a href="__DROP_INSTAGRAM__">instagram</a></span>
+        </p>
+    </div>
+</body>
+</html>

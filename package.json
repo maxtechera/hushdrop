@@ -1,0 +1,16 @@
+{
+  "name": "hushdrop-backend",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "@vercel/blob": "^0.27.0"
+  },
+  "description": "Backend (Vercel functions + edge middleware) for Hushdrop — open-source, self-hosted artifact sharing. The npm packages live in skill/ and npm/.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/maxtechera/hushdrop"
+  },
+  "homepage": "https://hushdrop.maxtechera.dev"
+}

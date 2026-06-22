@@ -1,0 +1,59 @@
+{
+  "name": "hushdrop-mcp",
+  "version": "0.3.0",
+  "description": "Open-source artifact sharing \u2014 publish HTML/Markdown/files as branded, password-protected, zero-knowledge links on your own domain, from any AI agent. CLI + MCP server. The open-source, self-hosted Stacktree alternative.",
+  "type": "module",
+  "bin": {
+    "hush": "./drop.mjs",
+    "hushdrop": "./drop.mjs",
+    "hushdrop-mcp": "./mcp.mjs",
+    "hushdrop-install": "./install.mjs"
+  },
+  "files": [
+    "drop.mjs",
+    "mcp.mjs",
+    "install.mjs",
+    "brand/",
+    "SKILL.md",
+    "SETUP.md"
+  ],
+  "keywords": [
+    "mcp",
+    "ai-agents",
+    "claude",
+    "claude-code",
+    "artifacts",
+    "file-sharing",
+    "zero-knowledge",
+    "cli",
+    "self-hosted",
+    "staticrypt",
+    "vercel-blob",
+    "password-protection",
+    "stacktree-alternative",
+    "publish-html",
+    "mcp-server",
+    "cursor",
+    "anthropic",
+    "artifact-sharing",
+    "send-co-alternative"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/maxtechera/hushdrop"
+  },
+  "homepage": "https://hushdrop.maxtechera.dev",
+  "bugs": "https://github.com/maxtechera/hushdrop/issues",
+  "author": "Max Techera (https://maxtechera.dev)",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@vercel/blob": "^0.27.0",
+    "adm-zip": "^0.5.17",
+    "marked": "^18.0.5",
+    "zod": "^3.23.0"
+  }
+}
