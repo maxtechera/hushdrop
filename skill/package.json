@@ -1,6 +1,6 @@
 {
   "name": "hushdrop-mcp",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Open-source artifact sharing \u2014 publish HTML/Markdown/files as branded, password-protected, zero-knowledge links on your own domain, from any AI agent. CLI + MCP server. The open-source, self-hosted Stacktree alternative.",
   "type": "module",
   "bin": {
@@ -55,5 +55,6 @@
     "adm-zip": "^0.5.17",
     "marked": "^18.0.5",
     "zod": "^3.23.0"
-  }
+  },
+  "mcpName": "io.github.maxtechera/hushdrop"
 }
