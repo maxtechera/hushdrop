@@ -3,16 +3,145 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/mt-relay/static/:path*", "destination": "https://us-assets.i.posthog.com/static/:path*" },
-    { "source": "/mt-relay/array/:path*", "destination": "https://us-assets.i.posthog.com/array/:path*" },
-    { "source": "/mt-relay/:path*", "destination": "https://us.i.posthog.com/:path*" },
-    { "source": "/", "destination": "/index.html" },
-    { "source": "/install", "destination": "/install.sh" },
-    { "source": "/mcp", "destination": "/api/mcp" },
-    { "source": "/u/:slug(burn-[A-Za-z0-9-]+)", "destination": "/api/burn?slug=:slug" },
-    { "source": "/s/:t([a-f0-9]+)", "destination": "/api/s?t=:t" }
+    {
+      "source": "/mt-relay/static/:path*",
+      "destination": "https://us-assets.i.posthog.com/static/:path*"
+    },
+    {
+      "source": "/mt-relay/array/:path*",
+      "destination": "https://us-assets.i.posthog.com/array/:path*"
+    },
+    {
+      "source": "/mt-relay/:path*",
+      "destination": "https://us.i.posthog.com/:path*"
+    },
+    {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/install",
+      "destination": "/install.sh"
+    },
+    {
+      "source": "/mcp",
+      "destination": "/api/mcp"
+    },
+    {
+      "source": "/u/:slug(burn-[A-Za-z0-9-]+)",
+      "destination": "/api/burn?slug=:slug"
+    },
+    {
+      "source": "/s/:t([a-f0-9]+)",
+      "destination": "/api/s?t=:t"
+    }
   ],
   "crons": [
-    { "path": "/api/gc", "schedule": "0 3 * * *" }
+    {
+      "path": "/api/gc",
+      "schedule": "0 3 * * *"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/blog/why-agents-need-a-publish-primitive",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/blog/mcp-servers-explained-for-developers",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/blog/private-by-default-html-hosting",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/blog/mcp-2026-spec-changes",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/blog/mcp-resources-vs-tools-vs-prompts",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/blog/what-is-mcp-elicitation",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/blog/sites-in-codex-explained",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/blog/can-you-make-a-codex-site-public",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/blog/what-are-claude-live-artifacts",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/blog/artifacts-in-claude-code-explained",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/blog/slack-renders-html-attachments",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/blog/per-seat-pricing-ai-agents",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/blog/agent-paid-to-provision-itself",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/blog/what-shopify-quick-proves",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/blog/what-is-vercel-drop",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/blog/loop-engineering-paywall",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/blog/what-ai-agents-publish",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/blog/dashboard-speaks-webmcp",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/website-builder-migration",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/export-webflow-site",
+      "destination": "/",
+      "permanent": true
+    }
   ]
 }

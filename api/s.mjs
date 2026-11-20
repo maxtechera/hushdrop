@@ -16,7 +16,7 @@ export default async function handler(req, res) {
   if (!token || !/^[a-f0-9]{8,}$/.test(token)) return res.status(400).send("bad link");
 
   const db = admin();
-  const { data: tok } = await db.from("share_tokens").select("handle, slug, revoked_at").eq("token", token).maybeSingle();
+  const { data: tok } = await db.from("share_tokens").select("*").eq("token", token).maybeSingle();
   if (!tok) return res.status(404).send("This share link doesn't exist.");
   if (tok.revoked_at) return res.status(403).send("This share link has been revoked.");
 
@@ -27,6 +27,10 @@ export default async function handler(req, res) {
   try { upstream = await fetch(`${BLOB}/${site.blob_key}`); } catch { return res.status(502).send("upstream error"); }
   if (!upstream.ok) return res.status(upstream.status).send("not found");
   const buf = Buffer.from(await upstream.arrayBuffer());
+  // Per-link open counter (named links show which recipient opened it). Best-effort.
+  if (/text\/html/i.test(site.content_type || "text/html") && !/bot|crawl|preview|slack|whatsapp|telegram|discord|linkedin/i.test(req.headers["user-agent"] || "")) {
+    try { await db.from("share_tokens").update({ views: Number(tok.views || 0) + 1, last_viewed_at: new Date().toISOString() }).eq("token", token); } catch {}
+  }
   res.setHeader("content-type", site.content_type || "text/html; charset=utf-8");
   res.setHeader("content-disposition", "inline");
   res.setHeader("content-security-policy", CSP);

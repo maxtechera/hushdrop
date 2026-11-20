@@ -10,11 +10,12 @@
 
 import { verifyCookie } from "./api/_lib/cookie.mjs";
 import { renderUnlockPage } from "./api/_lib/unlock-page.mjs";
+import { renderLeadPage } from "./api/_lib/lead-page.mjs";
 
 export const config = {
   // Proxy everything to Blob EXCEPT the static landing page, indexable SEO pages,
   // crawler/analytics files, and Vercel internals (those serve as real static files).
-  matcher: ["/((?!_next/|_vercel/|api/|u/burn-|s/|favicon.ico$|sitemap.xml$|robots.txt$|llms.txt$|agent.txt$|compare.json$|server.json$|pricing.md$|install.sh$|install$|mcp$|admin$|mt-relay/|about$|agent-loop-hosting$|agents$|alternatives$|best-private-html-hosting$|best-ways-to-share-ai-artifacts$|blog$|blog/agent-paid-to-provision-itself$|blog/artifacts-in-claude-code-explained$|blog/can-you-make-a-codex-site-public$|blog/dashboard-speaks-webmcp$|blog/loop-engineering-paywall$|blog/mcp-2026-spec-changes$|blog/mcp-resources-vs-tools-vs-prompts$|blog/mcp-servers-explained-for-developers$|blog/per-seat-pricing-ai-agents$|blog/private-by-default-html-hosting$|blog/sites-in-codex-explained$|blog/slack-renders-html-attachments$|blog/what-ai-agents-publish$|blog/what-are-claude-live-artifacts$|blog/what-is-mcp-elicitation$|blog/what-is-vercel-drop$|blog/what-shopify-quick-proves$|blog/why-agents-need-a-publish-primitive$|changelog$|claude-ai-connector$|claude-artifacts-vs-chatgpt-canvas$|claude-code$|claude-desktop$|claude-live-artifacts$|claude-teams-artifact-sharing-alternative$|codex$|compare$|compare/github-pages-vs-vercel$|compare/hushdrop-vs-send-co$|compare/hushdrop-vs-shareduo$|compare/hushdrop-vs-stacktree$|compare/stacktree-vs-shareduo$|compare/storybook-vs-jupyter$|compare/tiiny-host-vs-netlify$|compare/vercel-drop-vs-netlify-drop$|cursor$|deploy-html-from-claude-code$|display-dev-alternative$|docs$|examples$|export-webflow-site$|faq$|gemini-cli$|github-pages-private-alternative$|glossary$|here-now-alternative$|host-ai-reports$|host-static-site-privately$|host-storybook-privately$|how-to-host-an-html-file-for-free$|how-to-password-protect-an-html-page$|how-to-share-ai-reports-with-clients$|internal-tool-hosting$|login$|make-claude-artifact-private$|mcp-publish-html$|ngrok-alternative-for-html$|openai-codex-sites-alternative$|opencode$|password-protect-a-website$|pricing$|private-html-hosting$|repaint-alternative$|security$|self-host$|self-hosted-vs-hosted-artifact-sharing$|send-co-alternative$|share-architecture-diagrams$|share-chatgpt-artifacts$|share-claude-artifacts$|share-claude-code-artifacts$|share-codex-artifacts$|share-copilot-artifacts$|share-cursor-artifacts$|share-gemini-artifacts$|share-jupyter-notebook-html$|shareduo-alternative$|shippage-ai-alternative$|skills$|slack$|stacktree-alternative$|static-app-alternative$|tiiny-host-alternative$|try$|use-cases$|vercel-alternative-for-agents$|vibe-coding-hosting$|vs/ooda$|vs/send$|vs/stacktree$|website-builder-migration$|what-are-claude-artifacts$|what-is-an-mcp-server$|windsurf$|x402$|zed$|$).*)"],
+  matcher: ["/((?!_next/|_vercel/|api/|u/burn-|s/|favicon.ico$|sitemap.xml$|robots.txt$|llms.txt$|agent.txt$|compare.json$|server.json$|pricing.md$|install.sh$|install$|mcp$|admin$|mt-relay/|about$|agent-loop-hosting$|agents$|alternatives$|best-private-html-hosting$|best-ways-to-share-ai-artifacts$|blog$|blog/how-hushdrop-encryption-works$|blog/how-to-share-a-claude-artifact$|blog/how-to-share-chatgpt-canvas$|blog/how-to-share-gemini-canvas$|blog/self-host-artifact-sharing$|burn-after-read-link$|changelog$|claude-ai-connector$|claude-artifacts-vs-chatgpt-canvas$|claude-code$|claude-desktop$|claude-live-artifacts$|claude-teams-artifact-sharing-alternative$|codex$|compare$|compare/github-pages-vs-vercel$|compare/hushdrop-vs-send-co$|compare/hushdrop-vs-shareduo$|compare/hushdrop-vs-stacktree$|compare/stacktree-vs-shareduo$|compare/storybook-vs-jupyter$|compare/tiiny-host-vs-netlify$|compare/vercel-drop-vs-netlify-drop$|cursor$|deploy-html-from-claude-code$|display-dev-alternative$|docs$|encrypted-html-sharing$|examples$|expiring-link-for-html$|faq$|gemini-cli$|github-pages-private-alternative$|glossary$|here-now-alternative$|host-ai-reports$|host-static-site-privately$|host-storybook-privately$|how-to-host-an-html-file-for-free$|how-to-password-protect-an-html-page$|how-to-share-ai-reports-with-clients$|internal-tool-hosting$|login$|make-claude-artifact-private$|mcp-publish-html$|ngrok-alternative-for-html$|openai-codex-sites-alternative$|opencode$|password-protect-a-website$|pricing$|private-html-hosting$|repaint-alternative$|security$|self-host$|self-hosted-vs-hosted-artifact-sharing$|send-co-alternative$|share-architecture-diagrams$|share-board-report-privately$|share-chatgpt-artifacts$|share-claude-artifacts$|share-claude-code-artifacts$|share-client-proposal-privately$|share-codex-artifacts$|share-copilot-artifacts$|share-cursor-artifacts$|share-gemini-artifacts$|share-incident-postmortem-privately$|share-investor-update-privately$|share-jupyter-notebook-html$|shareduo-alternative$|shippage-ai-alternative$|skills$|slack$|stacktree-alternative$|static-app-alternative$|tiiny-host-alternative$|try$|use-cases$|vercel-alternative-for-agents$|vibe-coding-hosting$|vs/ooda$|vs/send$|vs/stacktree$|what-are-claude-artifacts$|what-is-an-mcp-server$|windsurf$|x402$|zed$|$).*)"],
 };
 
 // Blob host. A self-host instance derives its OWN store from BLOB_READ_WRITE_TOKEN
@@ -50,6 +51,18 @@ const BLOB_ORIGIN = new URL(BLOB).origin;
 const PH_KEY = "phc_uoJ9K33L8vUaQe3a4pkwuxs9BC2qaDcsAvsadL9ULcHu"; // public client key (Hushdrop project)
 const BOT = /bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|whatsapp|telegram|discord|slack|linkedin|skype|curl|wget|python|headless/i;
 
+// Per-drop counters in Supabase (api/view → `hush stats`, alerts, webhooks). Hosted only;
+// no-op on self-host instances without Supabase. Runs inside waitUntil, after the response.
+function recordView(req, body) {
+  const secret = process.env.HUSH_GATE_SECRET || process.env.CRON_SECRET;
+  if (!secret || !process.env.SUPABASE_URL) return Promise.resolve();
+  return fetch(new URL("/api/view", req.url), {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-hush-internal": secret },
+    body: JSON.stringify(body),
+  }).catch(() => {});
+}
+
 async function trackView(req, pathname) {
   try {
     const ua = req.headers.get("user-agent") || "";
@@ -62,7 +75,8 @@ async function trackView(req, pathname) {
     const anon = parts[0] === "u";
     let refDomain = "";
     try { refDomain = new URL(req.headers.get("referer") || "").hostname; } catch {}
-    await fetch("https://us.i.posthog.com/i/v0/e/", {
+    const rec = !anon && parts.length >= 2 && recordView(req, { handle: parts[0], slug: parts[1], viewer, country: req.headers.get("x-vercel-ip-country"), referrer: refDomain, mobile: /mobile|android|iphone/i.test(ua) });
+    await Promise.all([rec, fetch("https://us.i.posthog.com/i/v0/e/", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
@@ -83,8 +97,33 @@ async function trackView(req, pathname) {
           is_mobile: /mobile|android|iphone/i.test(ua),
         },
       }),
-    });
+    })]);
   } catch {}
+}
+
+// Lead capture / email-domain gate for hosted drops (/<handle>/<slug>). A viewer who
+// already gave their email carries a signed hl_<handle>_<slug> cookie and skips the
+// lookup. Fails open if Supabase is unreachable or the migration isn't applied.
+async function leadGate(req, pathname, search) {
+  const secret = process.env.HUSH_GATE_SECRET, sb = process.env.SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!secret || !sb || !key) return null;
+  const parts = pathname.split("/").filter(Boolean);
+  if (parts.length < 2 || parts[0] === "u" || !/^[a-z0-9][a-z0-9-]*$/.test(parts[0]) || !/^[a-z0-9][a-z0-9-]*$/.test(parts[1])) return null;
+  if (/\.[a-z0-9]+$/i.test(pathname) && !/\.html?$/i.test(pathname)) return null;
+  const [handle, slug] = parts;
+  const m = (req.headers.get("cookie") || "").match(new RegExp(`(?:^|; )hl_${handle}_${slug}=([^;]+)`));
+  if (m && (await verifyCookie(decodeURIComponent(m[1]), `lead:${handle}/${slug}`, secret))) return null;
+  let row;
+  try {
+    const r = await fetch(`${sb}/rest/v1/sites?select=*&handle=eq.${handle}&slug=eq.${slug}`, { headers: { apikey: key, authorization: `Bearer ${key}` } });
+    if (!r.ok) return null;
+    row = (await r.json())[0];
+  } catch { return null; }
+  if (!row || (!row.lead_capture && !row.email_gate && !row.allow_emails?.length && !row.block_emails?.length)) return null;
+  return new Response(renderLeadPage({ handle, slug, next: pathname + search, fields: row.lead_fields || [], domain: row.email_gate }), {
+    status: 401,
+    headers: { "content-type": "text/html; charset=utf-8", "content-security-policy": CSP, "x-robots-tag": "noindex, nofollow", "cache-control": "no-store" },
+  });
 }
 
 export default async function middleware(req, ctx) {
@@ -120,6 +159,9 @@ export default async function middleware(req, ctx) {
       }
     }
   }
+
+  const lead = await leadGate(req, pathname, search);
+  if (lead) return lead;
 
   const accept = req.headers.get("accept") || "*/*";
   // Resolve against the blob origin; URL normalization makes host-escape impossible,

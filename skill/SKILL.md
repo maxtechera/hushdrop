@@ -85,7 +85,15 @@ drop -s q3-deck deck.html      # force the slug → /q3-deck
 hush list                      # list live drops + their passwords
 hush rm q3-deck                # delete a drop
 hush gc                        # delete drops whose --expire has passed (cron-friendly)
+hush stats q3-deck --json      # opened yet? views, people, first/last opened (hosted drops)
+hush alerts every               # email me on each new viewer (first open is on by default, free)
+hush leads q3-deck on --fields name,company   # ask for email (+fields, Pro) before it opens
+hush recipients q3-deck --link "Ann at Acme"  # Pro: named link, see if Ann opened it
+hush webhook add https://x.com/hook --events drop.first_opened,lead.captured  # Pro: signed callbacks
 ```
+
+When the user asks "did they open it?", "has anyone seen the link?" or "how many views", run
+`hush stats <slug> --json` (MCP: `drop_stats`) and answer from `opened`, `last_viewed_at`, `views`.
 
 **MCP server:** `node skill/mcp.mjs` exposes `publish_html`, `publish_file`, `update_site`,
 `list_sites`, `delete_site` over stdio. Wire it into agents with `node skill/install.mjs`.

@@ -188,5 +188,84 @@ server.tool(
   }
 );
 
+server.tool(
+  "drop_stats",
+  "Has my drop been opened yet? Returns views, unique viewers, first/last opened and daily views for a hosted drop (Pro adds referrers, countries, live viewers, recent views). Omit slug for a summary of every hosted drop.",
+  { slug: z.string().optional().describe("The drop's slug. Omit to list all hosted drops with their open status.") },
+  async ({ slug }) => {
+    try { return textResult(await runDrop(slug ? ["stats", slug] : ["stats"])); }
+    catch (e) { return errResult(e); }
+  }
+);
+
+server.tool(
+  "webhooks",
+  "Manage signed webhooks (Pro) that POST to an https URL when a hosted drop is first opened, viewed, or a lead is captured. action=add needs url (optional slug, events); rm/test need id; list shows all. The signing secret is returned once on add.",
+  {
+    action: z.enum(["list", "add", "rm", "test"]),
+    url: z.string().optional(), id: z.string().optional(), slug: z.string().optional(),
+    events: z.array(z.enum(["drop.viewed", "drop.first_opened", "lead.captured"])).optional(),
+  },
+  async ({ action, url, id, slug, events }) => {
+    try {
+      const args = ["webhook", action];
+      if (action === "add") { args.push(url || ""); if (slug) args.push("--slug", slug); if (events?.length) args.push("--events", events.join(",")); }
+      if (action === "rm" || action === "test") args.push(id || "");
+      return textResult(await runDrop(args));
+    } catch (e) { return errResult(e); }
+  }
+);
+
+server.tool(
+  "set_open_alerts",
+  "Email the owner when a hosted drop is opened. mode: off | first (first open, free) | every (each new viewer, Pro) | default (per-drop only: follow the account setting). Pass slug for one drop, omit for the account default. Omit mode to read the current setting.",
+  { mode: z.enum(["off", "first", "every", "default"]).optional(), slug: z.string().optional() },
+  async ({ mode, slug }) => {
+    try { const a = ["alerts"]; if (mode) a.push(mode); if (slug) a.push("--slug", slug); return textResult(await runDrop(a)); }
+    catch (e) { return errResult(e); }
+  }
+);
+
+server.tool(
+  "lead_capture",
+  "Require viewers of a hosted drop to enter their email before it opens (free), optionally with custom fields like name/company/phone (Pro). enabled=false turns it off.",
+  { slug: z.string(), enabled: z.boolean().optional(), fields: z.array(z.string()).optional().describe("Extra required fields, e.g. ['name','company'] (Pro).") },
+  async ({ slug, enabled, fields }) => {
+    try { const a = ["leads", slug, enabled === false ? "off" : "on"]; if (fields) a.push("--fields", fields.join(",")); return textResult(await runDrop(a)); }
+    catch (e) { return errResult(e); }
+  }
+);
+
+server.tool(
+  "list_leads",
+  "List the people who entered their email to open a hosted drop (email, custom fields, verified, country, time).",
+  { slug: z.string() },
+  async ({ slug }) => {
+    try { return textResult(await runDrop(["leads", slug])); }
+    catch (e) { return errResult(e); }
+  }
+);
+
+server.tool(
+  "recipients",
+  "Control who can open a hosted drop. With only slug: show allow/block lists and named links with their open counts. allow/block: emails or @domains (Pro; [] clears). link: mint a named guest link for one recipient so you can see if they opened it (Pro). revoke_link: kill one guest link by token (free).",
+  {
+    slug: z.string().optional(),
+    allow: z.array(z.string()).optional(), block: z.array(z.string()).optional(),
+    link: z.string().optional().describe("Recipient label, e.g. 'Ann at Acme'."),
+    revoke_link: z.string().optional().describe("Token of the guest link to revoke."),
+  },
+  async ({ slug, allow, block, link, revoke_link }) => {
+    try {
+      if (revoke_link) return textResult(await runDrop(["recipients", "--revoke-link", revoke_link]));
+      const a = ["recipients", slug || ""];
+      if (allow) a.push("--allow", allow.length ? allow.join(",") : "off");
+      if (block) a.push("--block", block.length ? block.join(",") : "off");
+      if (link) a.push("--link", link);
+      return textResult(await runDrop(a));
+    } catch (e) { return errResult(e); }
+  }
+);
+
 const transport = new StdioServerTransport();
 await server.connect(transport);

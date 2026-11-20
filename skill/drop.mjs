@@ -1016,6 +1016,95 @@ async function cmdShare(slug) {
   if (opts.revoke) return ok(`share token revoked for ${slug}`);
   ok(`revocable share link → ${d.url}\n  revoke anytime:  hush share ${slug} --revoke`);
 }
+async function cmdStats(slug) {
+  // "Opened yet?" — views, unique viewers, first/last opened (+ referrers/countries on Pro).
+  const d = await apiCall(slug ? `/api/stats?slug=${encodeURIComponent(slug)}` : `/api/stats`);
+  if (JSON_OUT) return console.log(JSON.stringify(d));
+  const ago = (t) => { if (!t) return "never"; const m = Math.round((Date.now() - new Date(t)) / 60000); return m < 60 ? `${m}m ago` : m < 2880 ? `${Math.round(m / 60)}h ago` : `${Math.round(m / 1440)}d ago`; };
+  if (!slug) {
+    if (!d.drops?.length) return ok("no hosted drops yet");
+    for (const s of d.drops) console.log(`  ${s.opened ? "●" : "○"} ${s.slug.padEnd(28)} ${String(s.views).padStart(5)} views  ${String(s.unique_viewers).padStart(4)} people  last ${ago(s.last_viewed_at)}`);
+    return;
+  }
+  console.log(`${d.opened ? "● opened" : "○ not opened yet"}  ${d.url}`);
+  console.log(`  views ${d.views} · people ${d.unique_viewers} · first ${ago(d.first_viewed_at)} · last ${ago(d.last_viewed_at)}`);
+  if (d.viewing_now) console.log(`  viewing now: ${d.viewing_now}`);
+  if (d.referrers?.length) console.log(`  referrers: ${d.referrers.map((r) => `${r.name} ${r.views}`).join(", ")}`);
+  if (d.countries?.length) console.log(`  countries: ${d.countries.map((r) => `${r.name} ${r.views}`).join(", ")}`);
+  if (d.pro_only) console.log(`  referrers, countries and live viewers are Pro → ${d.upgrade}`);
+}
+async function cmdWebhook(sub, arg) {
+  // Pro: signed HTTPS callbacks on drop.viewed / drop.first_opened / lead.captured.
+  const J = { "content-type": "application/json" };
+  let d;
+  if (sub === "add") {
+    if (!arg) die("usage: hush webhook add <https-url> [--slug <slug>] [--events drop.first_opened,lead.captured,drop.viewed]");
+    d = await apiCall(`/api/webhooks`, { method: "POST", headers: J, body: JSON.stringify({ url: arg, slug: opts.slug, events: opts.events ? opts.events.split(",").map((e) => e.trim()) : undefined }) });
+    if (JSON_OUT) return console.log(JSON.stringify(d));
+    return ok(`webhook ${d.id} → ${d.url}\n  events: ${d.events.join(", ")}${d.slug ? `  (only ${d.slug})` : ""}\n  signing secret (shown once): ${d.secret}\n  verify: HMAC-SHA256(secret, "<t>.<body>") == v1 in X-Hushdrop-Signature`);
+  }
+  if (sub === "rm") { if (!arg) die("usage: hush webhook rm <id>"); d = await apiCall(`/api/webhooks?id=${encodeURIComponent(arg)}`, { method: "DELETE" }); if (JSON_OUT) return console.log(JSON.stringify(d)); return ok(`webhook ${arg} removed`); }
+  if (sub === "test") { if (!arg) die("usage: hush webhook test <id>"); d = await apiCall(`/api/webhooks`, { method: "POST", headers: J, body: JSON.stringify({ id: arg, test: true }) }); if (JSON_OUT) return console.log(JSON.stringify(d)); return d.delivered ? ok(`test delivered (${d.status})`) : die(`test failed: ${d.error || d.status}`); }
+  d = await apiCall(`/api/webhooks`);
+  if (JSON_OUT) return console.log(JSON.stringify(d));
+  if (!d.webhooks.length) return ok("no webhooks — add one: hush webhook add https://example.com/hook");
+  for (const h of d.webhooks) console.log(`  ${h.id}  ${h.url}  [${h.events.join(",")}]${h.slug ? ` ${h.slug}` : ""}${h.disabled ? " DISABLED" : ""}${h.last_status ? ` last ${h.last_status}` : ""}`);
+}
+async function cmdAlerts(mode) {
+  // Email when a drop is opened: off | first (free) | every new viewer (Pro). --slug for one drop.
+  const d = mode
+    ? await apiCall(`/api/alerts`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ mode, slug: opts.slug }) })
+    : await apiCall(`/api/alerts`);
+  if (JSON_OUT) return console.log(JSON.stringify(d));
+  ok(`open alerts${d.slug ? ` on ${d.slug}` : ""}: ${d.mode}${d.email_enabled === false ? "  (email sending is not configured on this server yet)" : ""}`);
+}
+async function cmdLeads(slug, state) {
+  // Lead capture: ask viewers for their email (free) + custom fields (Pro) before the drop opens.
+  if (!slug) die("usage: hush leads <slug> [on|off] [--fields name,company] [--csv]");
+  if (state === "on" || state === "off") {
+    const d = await apiCall(`/api/leads`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ slug, enabled: state === "on", ...(opts.fields !== undefined ? { fields: opts.fields ? opts.fields.split(",") : [] } : {}) }) });
+    if (JSON_OUT) return console.log(JSON.stringify(d));
+    return ok(`lead capture ${d.lead_capture ? "on" : "off"} for ${slug}${d.fields?.length ? ` (asks: email, ${d.fields.join(", ")})` : ""}`);
+  }
+  if (opts.csv) {
+    const key = getApiKey(); if (!key) die("not logged in — run: hush login");
+    const r = await fetch(`${ORIGIN}/api/leads?slug=${encodeURIComponent(slug)}&format=csv`, { headers: { ...CLIENT_HEADERS, authorization: `Bearer ${key}` } });
+    if (!r.ok) die(`request failed (${r.status})`);
+    return process.stdout.write(await r.text() + "\n");
+  }
+  const d = await apiCall(`/api/leads?slug=${encodeURIComponent(slug)}`);
+  if (JSON_OUT) return console.log(JSON.stringify(d));
+  console.log(`lead capture: ${d.lead_capture ? "on" : "off"}${d.email_gate ? ` · email gate @${d.email_gate}` : ""} · ${d.leads.length} lead(s)`);
+  for (const l of d.leads) console.log(`  ${l.at.slice(0, 16).replace("T", " ")}  ${l.email}${l.verified ? " ✓" : ""}${Object.keys(l.fields).length ? "  " + Object.values(l.fields).join(" · ") : ""}`);
+}
+async function cmdRecipients(slug) {
+  // Who can open a drop: allow/block lists (Pro), named links per recipient (Pro), revoke one link (free).
+  const J = { "content-type": "application/json" };
+  if (opts.revokeLink) {
+    const d = await apiCall(`/api/recipients?token=${encodeURIComponent(opts.revokeLink)}`, { method: "DELETE" });
+    if (JSON_OUT) return console.log(JSON.stringify(d));
+    return ok(`link revoked (${d.slug})`);
+  }
+  if (!slug) die("usage: hush recipients <slug> [--allow a@x.com,@acme.com] [--block ...] [--link \"Ann at Acme\"] | --revoke-link <token>");
+  let d;
+  if (opts.link) {
+    d = await apiCall(`/api/recipients`, { method: "POST", headers: J, body: JSON.stringify({ slug, link: opts.link }) });
+    if (JSON_OUT) return console.log(JSON.stringify(d));
+    return ok(`link for ${d.label} → ${d.url}\n  opens are counted per link: hush recipients ${slug}`);
+  }
+  if (opts.allow !== undefined || opts.block !== undefined) {
+    const body = { slug };
+    if (opts.allow !== undefined) body.allow = opts.allow === "off" ? [] : opts.allow.split(",");
+    if (opts.block !== undefined) body.block = opts.block === "off" ? [] : opts.block.split(",");
+    d = await apiCall(`/api/recipients`, { method: "POST", headers: J, body: JSON.stringify(body) });
+    if (JSON_OUT) return console.log(JSON.stringify(d));
+    return ok(`${slug}: allow ${d.allow.length ? d.allow.join(", ") : "anyone"} · block ${d.block.length ? d.block.join(", ") : "none"}`);
+  }
+  d = await apiCall(`/api/recipients?slug=${encodeURIComponent(slug)}`);
+  if (JSON_OUT) return console.log(JSON.stringify(d));
+  console.log(`allow: ${d.allow.length ? d.allow.join(", ") : "anyone with the link"}\nblock: ${d.block.length ? d.block.join(", ") : "none"}`);
+  for (const l of d.links) console.log(`  ${l.revoked ? "✕" : l.views ? "●" : "○"} ${(l.label || "(unnamed)").padEnd(24)} ${String(l.views).padStart(4)} opens  ${l.url}${l.revoked ? "  revoked" : ""}`);
+}
 async function cmdMigrate() {
   // Re-home your hosted drops onto your own Vercel Blob, then rewrite config to self-host.
   const sites = (await apiCall("/api/sites")).sites || [];
@@ -1058,13 +1147,20 @@ const { values, positionals } = parseArgs({
     revoke: { type: "boolean" },
     "no-pii-check": { type: "boolean" },
     "block-pii": { type: "boolean" },
+    events: { type: "string" },
+    fields: { type: "string" },
+    csv: { type: "boolean" },
+    allow: { type: "string" },
+    block: { type: "string" },
+    link: { type: "string" },
+    "revoke-link": { type: "string" },
     help: { type: "boolean", short: "h" },
   },
 });
 const JSON_OUT = !!values.json;
 
 const [cmd, ...rest] = positionals;
-const opts = { password: values.password, slug: values.slug, title: values.title, page: values.page, noLock: values["no-lock"], token: values.token, domain: values.domain, blobHost: values["blob-host"], project: values.project, org: values.org, expire: values.expire, dryRun: values["dry-run"], noDeploy: values["no-deploy"], managed: values.managed, burn: values.burn, emailGate: values["email-gate"], revoke: values.revoke, noPiiCheck: values["no-pii-check"], blockPii: values["block-pii"] };
+const opts = { password: values.password, slug: values.slug, title: values.title, page: values.page, noLock: values["no-lock"], token: values.token, domain: values.domain, blobHost: values["blob-host"], project: values.project, org: values.org, expire: values.expire, dryRun: values["dry-run"], noDeploy: values["no-deploy"], managed: values.managed, burn: values.burn, emailGate: values["email-gate"], revoke: values.revoke, noPiiCheck: values["no-pii-check"], blockPii: values["block-pii"], events: values.events, fields: values.fields, csv: values.csv, allow: values.allow, block: values.block, link: values.link, revokeLink: values["revoke-link"] };
 
 try {
   if (cmd === "init") await cmdInit(opts);
@@ -1079,6 +1175,11 @@ try {
   else if (cmd === "claim") await cmdClaim(rest[0]);
   else if (cmd === "share") await cmdShare(rest[0]);
   else if (cmd === "migrate") await cmdMigrate();
+  else if (cmd === "recipients") await cmdRecipients(rest[0]);
+  else if (cmd === "leads") await cmdLeads(rest[0], rest[1]);
+  else if (cmd === "alerts") await cmdAlerts(rest[0]);
+  else if (cmd === "webhook" || cmd === "webhooks") await cmdWebhook(rest[0], rest[1]);
+  else if (cmd === "stats" || cmd === "opened") await cmdStats(rest[0]);
   else if (cmd === "set-expiry") await cmdSetExpiry(rest[0], rest[1]);
   else if (cmd === "set-email-gate") await cmdSetEmailGate(rest[0], rest[1]);
   else if (cmd === "set-feedback") await cmdSetFeedback(rest[0], rest[1]);
@@ -1109,6 +1210,16 @@ try {
   hush logout                   clear your hosted account (forget the API key)
   hush claim <url|slug>         move an anonymous /u/ drop into your account
   hush share <slug> [--revoke]  mint (or revoke) a revocable guest share link
+  hush stats [slug] [--json]     opened yet? views, people, last opened (all drops, or one)
+  hush webhook add <url> [--slug s] [--events a,b]  signed callbacks on opens/leads (Pro)
+  hush webhook [list|rm <id>|test <id>]           manage webhooks
+  hush alerts [off|first|every] [--slug s]  email me when a drop is opened (every viewer: Pro)
+  hush leads <slug> on [--fields name,company]  ask viewers for email (+ fields, Pro) first
+  hush leads <slug> [--csv]                  list captured leads (or export CSV)
+  hush recipients <slug>                       who can open it + per-recipient links and opens
+  hush recipients <slug> --allow a@x.com,@acme.com   only these may open it (Pro; --block too; "off" clears)
+  hush recipients <slug> --link "Ann at Acme"  named link for one recipient (Pro)
+  hush recipients --revoke-link <token>        kill one guest link, keep the others
   hush migrate [--dry-run]      re-home your hosted drops to your own blob (self-host)
   hush set-expiry <slug> <when> change a hosted drop's expiry (7d/24h/date/off)
   hush set-email-gate <slug> <domain>  restrict a hosted drop to one email domain
