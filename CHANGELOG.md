@@ -2,6 +2,11 @@
 
 All notable changes to the `drop` CLI / MCP packages. Format: [Keep a Changelog](https://keepachangelog.com).
 
+## [0.4.0] — 2026-06-24
+### Added
+- **Whole static sites from a folder or zip**: `hush ./dist` or `hush site.zip` uploads a multi-file static site under `/<slug>/` in one command — the root `index.html` is branded and gets a `<base href>` so relative links resolve. Skips `.git`/`node_modules`. Works with any build output (Next.js, Vite, Storybook…). Self-host only.
+- **Whole-site password gate** (`hush ./dist -p secret`, self-host): one password protects the entire multi-file site via a server-side edge gate — a branded unlock page sets a signed, site-scoped session cookie. The server stores only a salted PBKDF2 verifier; the password never leaves your machine. (Single HTML files keep client-side zero-knowledge AES-256.) `hush deploy` provisions the gate secret automatically.
+
 ## [0.2.2] — 2026-06-20
 ### Fixed
 - `hush login` no longer hangs: the browser opener is non-blocking (was `spawnSync`).

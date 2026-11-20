@@ -10,6 +10,8 @@ skill/package-lock.json
 # stray staticrypt working artifact
 .staticrypt.json
 .claude/worktrees/
+# personal per-skill symlinks into ~/dev/agentic-os (machine-specific abs paths)
+.claude/skills/
 
 # supabase CLI scratch
 supabase/.temp/

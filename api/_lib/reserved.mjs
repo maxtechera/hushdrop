@@ -1,7 +1,7 @@
 // Reserved handles — a user handle must not shadow a marketing page slug or system prefix.
 // Keep in sync with the generated page set (gen-site writes the middleware matcher).
 export const RESERVED = new Set([
-  "u", "s", "b", "api", "_brand", "_next", "_vercel", "try", "install", "login", "account",
+  "u", "s", "b", "api", "_brand", "_next", "_vercel", "try", "install", "login", "account", "admin",
   "demo", "docs", "blog", "pricing", "security", "self-host", "about", "faq",
   "glossary", "changelog", "x402", "use-cases", "alternatives", "agents", "compare",
   "sitemap.xml", "robots.txt", "llms.txt", "pricing.md", "favicon.ico", "share-claude-artifacts",

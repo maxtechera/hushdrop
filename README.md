@@ -99,7 +99,7 @@ Full write-ups: [vs Stacktree](https://hushdrop.dev/stacktree-alternative) · [v
 - 🤖 **Agent-native** — one CLI command or 9 MCP tools; any agent that runs a shell can publish.
 - ⏱️ **Auto-expire & burn-after-read** — `--expire 7d`, `--burn`, server-enforced cleanup.
 - 📧 **Email-gate & revocable share links** — restrict by domain, mint/revoke guest links.
-- 📦 **Anything static** — HTML, Markdown (rendered), PDFs, images, multi-file zips → sites.
+- 📦 **Whole static sites** — drop a folder or zip (`hush ./dist`, `hush site.zip`) → a multi-file site at `/<slug>/`, optionally behind one password. Plus single HTML, Markdown, PDFs, images.
 - 🚀 **One-click self-host** — Deploy to Vercel auto-provisions Blob; no DB to run.
 
 ## What you can drop
@@ -115,6 +115,7 @@ Full write-ups: [vs Stacktree](https://hushdrop.dev/stacktree-alternative) · [v
 | `hush report.html --email-gate acme.com` | Only viewers with that email domain can open it |
 | `hush deck.pdf --page` | A branded **download page** wrapping the file |
 | `hush site.zip` | Multi-file static site at `yourdomain.com/<slug>/` |
+| `hush ./dist -p secret` | Whole folder as a site, locked behind one password (self-host) |
 | `hush -s q3 deck.html` | Force the slug |
 
 ## CLI reference
@@ -197,6 +198,10 @@ share.yoursite.com` to point your CLI + agents at your instance. Self-host is **
 - Passwords are stored in `~/.hushdrop/manifest.json` on your machine only — never uploaded.
 
 See [SECURITY.md](SECURITY.md) to report a vulnerability.
+
+## Usage analytics
+
+When the CLI talks to the hosted service (hushdrop.dev), it sends anonymous usage context with each API call: client version, OS, the AI agent it runs under (for example Claude Code or Cursor), and a random per-machine install id stored in `~/.hushdrop/install-id`. Drop contents and passwords are never sent. Set `HUSH_NO_TELEMETRY=1` or `DO_NOT_TRACK=1` to drop the install id. Views of drops on hushdrop.dev are counted without storing viewer IPs.
 
 ## Contributing
 

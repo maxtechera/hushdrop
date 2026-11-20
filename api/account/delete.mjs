@@ -3,6 +3,7 @@
 import { del } from "@vercel/blob";
 import { admin, userFromKey } from "../_lib/supabase.mjs";
 import { bearer } from "../_lib/keys.mjs";
+import { capture, reqProps } from "../_posthog.mjs";
 
 export default async function handler(req, res) {
   if (req.method !== "POST" && req.method !== "DELETE") {
@@ -24,5 +25,6 @@ export default async function handler(req, res) {
   await db.from("profiles").delete().eq("user_id", user.user_id);
   try { await db.auth.admin.deleteUser(user.user_id); } catch {}
 
+  await capture({ distinctId: user.user_id, event: "account_deleted", properties: { sites_removed: (sites || []).length, ...reqProps(req) } });
   return res.status(200).json({ deleted: true, sites_removed: (sites || []).length });
 }

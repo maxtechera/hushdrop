@@ -4,6 +4,7 @@
 // The URL lives under /u/ (so it auto-GCs) but is routed here by a vercel.json
 // rewrite, with the middleware proxy excluded for `u/burn-` paths.
 import { admin } from "./_lib/supabase.mjs";
+import { capture } from "./_posthog.mjs";
 
 const CSP =
   "default-src 'self' data: blob:; script-src 'unsafe-inline'; style-src 'unsafe-inline'; " +
@@ -28,6 +29,11 @@ export default async function handler(req, res) {
     res.setHeader("content-type", "text/html; charset=utf-8");
     return res.status(410).send("<!doctype html><meta charset=utf-8><title>Gone</title><body style=\"font:16px/1.5 -apple-system,system-ui,sans-serif;max-width:32rem;margin:18vh auto;padding:0 1rem;color:#333\"><h1>This drop is gone.</h1><p>It was set to burn after the first view — and it has been viewed. Nothing remains on the server.</p>");
   }
+  await capture({
+    distinctId: slug,
+    event: "drop_viewed",
+    properties: { slug, tier: "burn", content_type: data.content_type || "text/html" },
+  });
   res.setHeader("content-type", data.content_type || "text/html; charset=utf-8");
   res.setHeader("content-disposition", "inline");
   res.setHeader("content-security-policy", CSP);

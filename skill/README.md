@@ -22,6 +22,8 @@ hush login                   # free account → persistent links on your own han
 hush deploy --domain you.com # self-host → your own domain (after a Blob token)
 drop notes.md                # markdown → branded HTML
 drop site.zip                # multi-file static site
+drop ./dist                  # whole folder as a static site
+drop ./dist -p secret        # lock the whole site (self-host)
 hush list | rm <slug> | gc   # manage drops
 ```
 

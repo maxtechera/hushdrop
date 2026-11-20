@@ -14,13 +14,14 @@
  * Serving is a dumb Vercel rewrite/edge-proxy (<domain>/<slug> → blob). No deploy per file.
  */
 
-import { readFile, writeFile, mkdir, mkdtemp, readdir, rm } from "node:fs/promises";
-import { existsSync, readFileSync } from "node:fs";
+import { readFile, writeFile, mkdir, mkdtemp, readdir, rm, stat } from "node:fs/promises";
+import { existsSync, readFileSync, statSync, mkdirSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join, dirname, basename, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { spawn, spawnSync } from "node:child_process";
+import { collectSiteFiles, makeVerifier } from "./site.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DROP_HOME = join(homedir(), ".hushdrop");
@@ -59,6 +60,38 @@ function loadConfig() {
 const CONFIG = loadConfig();
 const DOMAIN = CONFIG.domain;
 const ORIGIN = CONFIG.origin;
+
+// ---------- client context (anonymous product analytics) ----------
+// Sent as headers on hushdrop API calls so the hosted service can tell which client,
+// version, OS and AI agent published. A random install id (no personal data) lets
+// anonymous publishes from the same machine be counted as one user, and joins them to
+// the account after `hush login`. Never sent to self-hosted deployments' Blob uploads.
+const CLI_VERSION = (() => { try { return JSON.parse(readFileSync(join(__dirname, "package.json"), "utf8")).version || "dev"; } catch { return "dev"; } })();
+function installId() {
+  const f = join(DROP_HOME, "install-id");
+  try { const v = readFileSync(f, "utf8").trim(); if (/^[a-f0-9-]{36}$/.test(v)) return v; } catch {}
+  const v = globalThis.crypto.randomUUID();
+  try { mkdirSync(DROP_HOME, { recursive: true }); writeFileSync(f, v); } catch {}
+  return v;
+}
+function detectAgent(env = process.env) {
+  if (env.CLAUDECODE || env.CLAUDE_CODE_ENTRYPOINT) return "claude-code";
+  if (env.CURSOR_TRACE_ID || env.CURSOR_AGENT) return "cursor";
+  if (env.CODEX_SANDBOX || env.CODEX_HOME || env.CODEX_MANAGED_BY_NPM) return "codex";
+  if (env.GEMINI_CLI) return "gemini-cli";
+  if (env.OPENCODE || env.OPENCODE_BIN) return "opencode";
+  if (env.WINDSURF_EXTENSION || env.CODEIUM_API_KEY) return "windsurf";
+  if (env.AIDER_MODEL || env.AIDER_CHAT_HISTORY_FILE) return "aider";
+  if (env.ZED_TERM) return "zed";
+  if (env.TERM_PROGRAM === "vscode") return "vscode";
+  return "terminal";
+}
+const CLIENT_HEADERS = (() => {
+  const h = { "x-drop-client": "cli", "x-drop-client-version": CLI_VERSION, "x-drop-os": `${process.platform}-${process.arch}`, "x-drop-agent": detectAgent(), "x-drop-node": process.versions.node };
+  if (process.env.CI) h["x-drop-ci"] = "1";
+  if (!process.env.HUSH_NO_TELEMETRY && !process.env.DO_NOT_TRACK) h["x-drop-install-id"] = installId();
+  return h;
+})();
 const BRAND = CONFIG.brandDir;
 
 // ---------- helpers ----------
@@ -101,6 +134,12 @@ const rand = (n) => {
   (globalThis.crypto || require("node:crypto").webcrypto).getRandomValues(buf);
   for (let i = 0; i < n; i++) s += a[buf[i] % a.length];
   return s;
+};
+
+const randomHex = (n) => {
+  const buf = new Uint8Array(n);
+  (globalThis.crypto || require("node:crypto").webcrypto).getRandomValues(buf);
+  return [...buf].map((b) => b.toString(16).padStart(2, "0")).join("");
 };
 
 const ADJ = ["amber","brisk","clever","copper","dusky","ember","fleet","golden","hazel","ivory","jolly","keen","lunar","mellow","noble","opal","prime","quartz","rapid","silver","tidal","umber","vivid","witty","zesty","bold","crisp","swift","sunny","quiet"];
@@ -322,7 +361,7 @@ async function upload(key, body, contentType, token) {
 // managed endpoint. No token, no Vercel setup — the server assigns a `u/` slug.
 async function managedPublish(body, contentType, { burn } = {}) {
   const endpoint = `${ORIGIN}/api/publish`;
-  const headers = { "content-type": "application/octet-stream", "x-drop-content-type": contentType };
+  const headers = { ...CLIENT_HEADERS, "content-type": "application/octet-stream", "x-drop-content-type": contentType };
   if (burn) headers["x-drop-burn"] = "1";
   let r;
   try {
@@ -336,7 +375,7 @@ async function managedPublish(body, contentType, { burn } = {}) {
 // authenticated with the API key so the drop lands persistently at <handle>/<slug>.
 async function hostedPublish(body, contentType, slug, locked, emailGate) {
   const key = getApiKey();
-  const headers = { "content-type": "application/octet-stream", "x-drop-content-type": contentType, authorization: `Bearer ${key}` };
+  const headers = { ...CLIENT_HEADERS, "content-type": "application/octet-stream", "x-drop-content-type": contentType, authorization: `Bearer ${key}` };
   if (slug) headers["x-drop-slug"] = slug;
   if (locked) headers["x-drop-locked"] = "1";
   if (emailGate) headers["x-drop-email-gate"] = String(emailGate).replace(/^@/, "").toLowerCase();
@@ -359,8 +398,29 @@ async function ensureDep(name) {
 }
 
 // ---------- commands ----------
+// ---------- Claude artifacts ----------
+// The Artifact tool's `read` saves a claude.ai artifact as a file whose authored page sits
+// inside a viewer skeleton: `<!doctype html><html><head>…</head><body>\n<!doctype html>…</html>\n</body></html>`.
+// Unwrap only when the outer body holds a complete inner document; a page authored as a
+// fragment has a single doctype and is already the whole document, so it's left alone.
+function unwrapClaudeArtifact(html) {
+  const m = html.match(/^\s*<!doctype html>\s*<html[^>]*>\s*<head>[\s\S]*?<\/head>\s*<body[^>]*>\s*(<!doctype html>[\s\S]*<\/html>)\s*<\/body>\s*<\/html>\s*$/i);
+  return m ? { html: m[1], unwrapped: true } : { html, unwrapped: false };
+}
+function htmlTitle(html) {
+  const m = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  if (!m) return null;
+  const t = m[1].replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, " ").trim();
+  return t || null;
+}
+const isClaudeArtifactUrl = (s) => /^https?:\/\/(www\.)?claude\.ai\/(code\/)?artifact\//i.test(s || "");
+const CLAUDE_ARTIFACT_HINT = "claude.ai artifacts are private pages and can't be fetched by URL.\n" +
+  "  Agents: if you wrote it this session, hush the local .html you published. Otherwise read it with\n" +
+  "  the Artifact tool (action: \"read\") and run: hush <the saved artifact-*.html path>";
+
 async function cmdDrop(file, opts) {
   if (!file) die("usage: hush <file> [-p password] [-s slug] [--page] [--no-lock]");
+  if (isClaudeArtifactUrl(file)) die(CLAUDE_ARTIFACT_HINT);
   if (!existsSync(file)) die(`no such file: ${file}`);
 
   const ext = extname(file).toLowerCase();
@@ -382,55 +442,35 @@ async function cmdDrop(file, opts) {
   const logoUri = await dataUri(join(BRAND, "logo-white.png"));
   const faviconUri = await dataUri(join(BRAND, "favicon.png"));
   const ogImage = `${ORIGIN}/_brand/og.png`; // optional; harmless if absent
-  const stat = (await readFile(file)).length;
   const expiresAt = parseExpiry(opts.expire);
   if (opts.expire && !expiresAt) die(`bad --expire value: ${opts.expire} (use 7d, 24h, 30m, 2w, or a date)`);
+
+  // folder OR zip → whole static site under <slug>/ (handled before any readFile,
+  // since readFile on a directory throws). Self-host only.
+  const isSite = statSync(file).isDirectory() || ext === ".zip";
+  if (isSite) {
+    if (mode === "managed" || mode === "hosted")
+      die(`the ${mode} tier supports HTML/markdown only. Self-host ('hush deploy') for files, --page, and sites.`);
+    if (!token) die("sites need self-host: run 'hush deploy' (or 'hush setup --token …') first.");
+    return uploadSite(file, opts, { token, logoUri, ogImage, expiresAt });
+  }
+
+  const stat = (await readFile(file)).length;
 
   if ((mode === "managed" || mode === "hosted") && (opts.page || !isHtml)) die(`the ${mode} tier supports HTML/markdown only. Self-host ('hush deploy') for files, --page, and zip sites.`);
 
   const manifest = await loadManifest();
   const now = new Date().toISOString();
 
-  // multi-file static site from a zip → uploaded under <slug>/, served at <slug>/
-  if (ext === ".zip") {
-    const { default: AdmZip } = await ensureDep("adm-zip");
-    const slug = opts.slug || slugify(file) + "-" + rand(4);
-    const entries = new AdmZip(file).getEntries().filter((e) => !e.isDirectory);
-    if (!entries.length) die("empty zip");
-    const indexEntry = entries
-      .filter((e) => /(^|\/)index\.html?$/i.test(e.entryName))
-      .sort((a, b) => a.entryName.split("/").length - b.entryName.split("/").length)[0];
-    if (!indexEntry) die("no index.html found in the zip");
-    // strip a single wrapping top-level folder if present (e.g. dist/)
-    const top = indexEntry.entryName.includes("/") ? indexEntry.entryName.slice(0, indexEntry.entryName.indexOf("/") + 1) : "";
-    let total = 0, count = 0;
-    for (const e of entries) {
-      const rel = top && e.entryName.startsWith(top) ? e.entryName.slice(top.length) : e.entryName;
-      if (!rel || rel.startsWith("..")) continue;
-      let data = e.getData();
-      if (/^index\.html?$/i.test(rel)) {
-        let html = data.toString("utf8");
-        // <base> so relative asset links resolve under /<slug>/ regardless of trailing slash
-        if (/<head[^>]*>/i.test(html)) html = html.replace(/<head([^>]*)>/i, `<head$1><base href="/${slug}/">`);
-        else html = `<base href="/${slug}/">\n` + html;
-        html = await brandHtml(html, { title: opts.title || basename(file, ext), url: `${ORIGIN}/${slug}/`, logoUri, ogImage, expiresAt });
-        data = Buffer.from(html, "utf8");
-      }
-      await upload(`${slug}/${rel}`, data, mimeFor(extname(rel)), token);
-      total += data.length; count++;
-    }
-    const url = `${ORIGIN}/${slug}/`;
-    manifest.unshift({ slug, url, type: "site", locked: false, password: null, file: basename(file), size: total, createdAt: now, expiresAt: expiresAt || null });
-    await saveManifest(manifest);
-    report({ url, password: null, locked: false, extra: `${count} files (multi-file site, public)` });
-    return;
-  }
-
   if (isHtml && !opts.page) {
-    const slug = opts.slug || slugify(file) + "-" + rand(4);
-    const url = `${ORIGIN}/${slug}`;
-    const title = opts.title || basename(file, ext).replace(/[-_]+/g, " ");
     let html = await readFile(file, "utf8");
+    // A saved Claude artifact: publish the authored page, named after its own <title>.
+    const art = isMd ? { html, unwrapped: false } : unwrapClaudeArtifact(html);
+    html = art.html;
+    const artTitle = art.unwrapped ? htmlTitle(html) : null;
+    const slug = opts.slug || (artTitle ? slugify(`${artTitle}.html`).slice(0, 48).replace(/-+$/, "") || "artifact" : slugify(file)) + "-" + rand(4);
+    const url = `${ORIGIN}/${slug}`;
+    const title = opts.title || artTitle || basename(file, ext).replace(/[-_]+/g, " ");
     if (isMd) html = await mdToHtml(html, title);
 
     // PII / secret scan on the RAW content (before brand + encrypt). Warn by default
@@ -525,6 +565,55 @@ async function cmdDrop(file, opts) {
   report({ url, password: null, locked: false, extra: expiresAt ? `expires: ${new Date(expiresAt).toISOString().slice(0, 16).replace("T", " ")}` : undefined });
 }
 
+// Publish a whole static site (folder or zip) under <slug>/. Brands only the root
+// index.html (injects <base href> so relative links resolve); other files upload as-is.
+// With opts.password, also writes a <slug>/.hush.json PBKDF2 verifier (edge gate).
+async function uploadSite(input, opts, { token, logoUri, ogImage, expiresAt }) {
+  const { files, indexRel } = await collectSiteFiles(input, {
+    loadZip: async () => (await ensureDep("adm-zip")).default,
+  });
+  const slug = opts.slug || slugify(basename(input)) + "-" + rand(4);
+  const now = new Date().toISOString();
+
+  if (!opts.noPiiCheck) {
+    const hits = new Set();
+    for (const f of files) if (/\.html?$/i.test(f.rel)) scanPII(f.data.toString("utf8")).forEach((h) => hits.add(h));
+    if (hits.size) {
+      const msg = `possible sensitive data in site: ${[...hits].join(", ")}`;
+      if (opts.blockPii) die(`⚠ ${msg}\n  refusing to publish (--block-pii). Remove it, or drop --no-pii-check.`);
+      if (!JSON_OUT) console.error(`\x1b[33m⚠ ${msg}\x1b[0m`);
+    }
+  }
+
+  let total = 0;
+  for (const f of files) {
+    let data = f.data;
+    if (f.rel === indexRel) {
+      let html = data.toString("utf8");
+      if (/<head[^>]*>/i.test(html)) html = html.replace(/<head([^>]*)>/i, `<head$1><base href="/${slug}/">`);
+      else html = `<base href="/${slug}/">\n` + html;
+      html = await brandHtml(html, { title: opts.title || slug, url: `${ORIGIN}/${slug}/`, logoUri, ogImage, expiresAt });
+      data = Buffer.from(html, "utf8");
+    }
+    await upload(`${slug}/${f.rel}`, data, mimeFor(extname(f.rel)), token);
+    total += data.length;
+  }
+
+  let password = null;
+  if (opts.password) {
+    password = opts.password;
+    const verifier = await makeVerifier(password, { name: CONFIG.brand?.name, logoUri, color: CONFIG.brand?.primaryColor });
+    await upload(`${slug}/.hush.json`, Buffer.from(JSON.stringify(verifier)), "application/json", token);
+  }
+
+  const url = `${ORIGIN}/${slug}/`;
+  const manifest = await loadManifest();
+  manifest.unshift({ slug, url, type: "site", locked: !!password, password,
+    file: basename(input), size: total, count: files.length, createdAt: now, expiresAt: expiresAt || null });
+  await saveManifest(manifest);
+  report({ url, password, locked: !!password, extra: `${files.length} files · site · ${password ? "locked" : "public"}` });
+}
+
 function report({ url, password, locked, extra }) {
   if (JSON_OUT) { console.log(JSON.stringify({ url, password: password || null, locked: !!locked, extra: extra || null })); return; }
   console.log("");
@@ -542,7 +631,7 @@ const useHosted = () => getApiKey() && !getToken();
 
 async function hostedList() {
   const key = getApiKey();
-  let r; try { r = await fetch(`${ORIGIN}/api/sites`, { headers: { authorization: `Bearer ${key}` } }); } catch (e) { die(e.message); }
+  let r; try { r = await fetch(`${ORIGIN}/api/sites`, { headers: { ...CLIENT_HEADERS, authorization: `Bearer ${key}` } }); } catch (e) { die(e.message); }
   if (!r.ok) die("could not list drops (key invalid? run `hush login`)");
   const { sites } = await r.json();
   const local = await loadManifest();
@@ -558,7 +647,7 @@ async function hostedList() {
 
 async function hostedRm(slug) {
   const key = getApiKey();
-  let r; try { r = await fetch(`${ORIGIN}/api/sites?slug=${encodeURIComponent(slug)}`, { method: "DELETE", headers: { authorization: `Bearer ${key}` } }); } catch (e) { die(e.message); }
+  let r; try { r = await fetch(`${ORIGIN}/api/sites?slug=${encodeURIComponent(slug)}`, { method: "DELETE", headers: { ...CLIENT_HEADERS, authorization: `Bearer ${key}` } }); } catch (e) { die(e.message); }
   if (!r.ok) { let m; try { m = (await r.json()).error; } catch {} die(m || "remove failed"); }
   const m = await loadManifest(); const kept = m.filter((d) => d.slug !== slug); if (kept.length !== m.length) await saveManifest(kept);
   if (JSON_OUT) { console.log(JSON.stringify({ removed: slug })); return; }
@@ -704,6 +793,21 @@ async function cmdDeploy(opts) {
     ok(`config + token saved to ${DROP_HOME}`);
   }
 
+  // 4b. Gate cookie-signing secret (idempotent — never overwrite a live one, which would
+  // invalidate existing site sessions).
+  if (!dry) {
+    const sh = process.platform === "win32";
+    const ls = spawnSync("vercel", ["env", "ls", "production"], { cwd: repoRoot, encoding: "utf8", shell: sh });
+    if (!/HUSH_GATE_SECRET/.test(ls.stdout || "")) {
+      const add = spawnSync("vercel", ["env", "add", "HUSH_GATE_SECRET", "production"],
+        { cwd: repoRoot, input: randomHex(32) + "\n", encoding: "utf8", shell: sh });
+      if (add.status === 0) ok("provisioned HUSH_GATE_SECRET (site password gate)");
+      else console.error("\x1b[33m⚠ could not set HUSH_GATE_SECRET — add it manually: vercel env add HUSH_GATE_SECRET production\x1b[0m");
+    }
+  } else {
+    console.log("Dry run — would ensure HUSH_GATE_SECRET is set (vercel env add HUSH_GATE_SECRET production)");
+  }
+
   // 5. deploy + domain
   if (dry || opts.noDeploy) {
     console.log(`\n${dry ? "Dry run — would run" : "Skipped deploy. Run"}:  vercel deploy --prod${opts.domain ? `  &&  vercel domains add ${opts.domain}` : ""}`);
@@ -821,7 +925,7 @@ function openBrowser(url) {
 async function cmdLogin(opts) {
   if (opts.token && opts.token.startsWith("drop_")) { await saveApiKey(opts.token); ok("API key saved"); return cmdWhoami(); }
   let start;
-  try { start = await (await fetch(`${ORIGIN}/api/auth/device/start`, { method: "POST" })).json(); }
+  try { start = await (await fetch(`${ORIGIN}/api/auth/device/start`, { method: "POST", headers: CLIENT_HEADERS })).json(); }
   catch (e) { die(`could not reach ${ORIGIN}: ${e.message}`); }
   if (!start?.code) die("login unavailable (hosted tier not configured yet)");
   console.log(`\n  opening ${start.verify_url}`);
@@ -832,7 +936,7 @@ async function cmdLogin(opts) {
   while (Date.now() < deadline) {
     await sleep((start.poll_interval || 2) * 1000);
     process.stdout.write(".");
-    let p; try { p = await (await fetch(`${ORIGIN}/api/auth/device/poll?code=${start.code}`)).json(); } catch { continue; }
+    let p; try { p = await (await fetch(`${ORIGIN}/api/auth/device/poll?code=${start.code}`, { headers: CLIENT_HEADERS })).json(); } catch { continue; }
     if (p.status === "approved" && p.api_key) { console.log(""); await saveApiKey(p.api_key); ok(`logged in — key saved to ${CONFIG_FILE}`); return cmdWhoami(); }
     if (p.status === "denied") { console.log(""); die("authorization denied"); }
     if (p.status === "expired") { console.log(""); die("code expired — run `hush login` again"); }
@@ -859,7 +963,7 @@ async function cmdLogout() {
 // Thin authenticated calls against the hosted API. Each needs `hush login` first.
 async function apiCall(path, init = {}) {
   const key = getApiKey(); if (!key) die("not logged in — run: hush login");
-  let r; try { r = await fetch(`${ORIGIN}${path}`, { ...init, headers: { authorization: `Bearer ${key}`, ...(init.headers || {}) } }); }
+  let r; try { r = await fetch(`${ORIGIN}${path}`, { ...init, headers: { ...CLIENT_HEADERS, authorization: `Bearer ${key}`, ...(init.headers || {}) } }); }
   catch (e) { die(`request failed: ${e.message}`); }
   let d = {}; try { d = await r.json(); } catch {}
   if (!r.ok) die(d.error || `request failed (${r.status})`);
@@ -992,7 +1096,8 @@ try {
   hush <file> --block-pii       refuse to publish if a secret/credential is detected
   hush <file> --page            branded download page wrapping the file
   hush <file> --page -p secret  password-protect the download page
-  hush site.zip                 multi-file static site → /slug/ (public)
+  hush <dir>|<site.zip>         publish a whole static site → /slug/ (folder or zip)
+  hush <dir> -p secret          lock the whole site behind a password (self-host)
   hush <file>                   raw file, unguessable URL
   hush -s myslug <file>         force the slug
   hush list                     list live drops (from the store, cross-machine)

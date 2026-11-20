@@ -3,6 +3,7 @@
 import { admin, userFromJwt } from "../../_lib/supabase.mjs";
 import { genKey } from "../../_lib/keys.mjs";
 import { isReservedHandle } from "../../_lib/reserved.mjs";
+import { capture, reqProps } from "../../_posthog.mjs";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
@@ -18,6 +19,7 @@ export default async function handler(req, res) {
 
   if (approve === false) {
     await sb.from("device_codes").update({ status: "denied", user_id: user.id }).eq("code", code);
+    await capture({ distinctId: user.id, event: "cli_denied", properties: { ...reqProps(req) } });
     return res.status(200).json({ ok: true, status: "denied" });
   }
 
@@ -30,6 +32,7 @@ export default async function handler(req, res) {
     const { error: he } = await sb.from("profiles").upsert({ user_id: user.id, handle: want });
     if (he) return res.status(409).json({ error: "handle taken", need_handle: true });
     userHandle = want;
+    await capture({ distinctId: user.id, event: "handle_claimed", properties: { handle: want, via: "cli_login", ...reqProps(req), $set: { handle: want } } });
   }
 
   // mint the key
@@ -37,5 +40,6 @@ export default async function handler(req, res) {
   await sb.from("api_keys").insert({ user_id: user.id, key_hash: hash, prefix, label: "cli" });
   await sb.from("device_codes").update({ status: "approved", api_key: key, user_id: user.id }).eq("code", code);
 
+  await capture({ distinctId: user.id, event: "cli_authorized", properties: { handle: userHandle, key_prefix: prefix, ...reqProps(req), $set: { handle: userHandle, email: user.email, has_cli: true }, $set_once: { first_cli_login_at: new Date().toISOString() } } });
   return res.status(200).json({ ok: true, status: "approved", handle: userHandle });
 }

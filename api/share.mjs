@@ -4,6 +4,7 @@
 import { randomBytes } from "node:crypto";
 import { admin, userFromKey } from "./_lib/supabase.mjs";
 import { bearer } from "./_lib/keys.mjs";
+import { capture, reqProps } from "./_posthog.mjs";
 
 export default async function handler(req, res) {
   const user = await userFromKey(bearer(req));
@@ -23,10 +24,12 @@ export default async function handler(req, res) {
     const token = randomBytes(12).toString("hex");
     const { error } = await db.from("share_tokens").insert({ token, user_id: user.user_id, handle: user.handle, slug });
     if (error) return res.status(500).json({ error: "could not mint token" });
+    await capture({ distinctId: user.user_id, event: "share_link_created", properties: { slug, handle: user.handle, ...reqProps(req) } });
     return res.status(200).json({ url: `https://${host}/s/${token}`, token, slug });
   }
   if (req.method === "DELETE") {
     await db.from("share_tokens").update({ revoked_at: new Date().toISOString() }).eq("user_id", user.user_id).eq("slug", slug).is("revoked_at", null);
+    await capture({ distinctId: user.user_id, event: "share_link_revoked", properties: { slug, handle: user.handle, ...reqProps(req) } });
     return res.status(200).json({ revoked: slug });
   }
   return res.status(405).json({ error: "POST or DELETE only" });

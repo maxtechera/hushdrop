@@ -1,7 +1,8 @@
 // Publish endpoint — serves two tiers from one route:
 //
 //   • Anonymous (no auth)  → zero-setup managed tier. Stored under `u/<slug>`,
-//     512 KB cap, html/markdown only, auto-deleted after 24h by api/gc.
+//     html/markdown only, auto-deleted after 24h by api/gc. Size cap is off by
+//     default (DROP_MANAGED_MAX_BYTES to re-enable); rate-limit + 24h GC remain.
 //   • Hosted (Bearer key)  → logged-in free tier. Stored persistently under
 //     `<handle>/<slug>`, larger cap, a `sites` row is written, quota enforced.
 //     The existing edge middleware already proxies `<handle>/<slug>` from Blob
@@ -17,14 +18,21 @@ import { randomBytes } from "node:crypto";
 import { admin, userFromKey } from "./_lib/supabase.mjs";
 import { bearer } from "./_lib/keys.mjs";
 import { rateLimit, clientIp } from "./_lib/ratelimit.mjs";
+import { capture, reqProps, installId, alias } from "./_posthog.mjs";
 
-const MAX_ANON = 512 * 1024;        // 512 KB per anonymous managed drop
-const MAX_HOSTED = 5 * 1024 * 1024; // 5 MB per hosted drop
+// Managed (anonymous) drop size cap. Disabled by default — set DROP_MANAGED_MAX_BYTES
+// (e.g. 524288 for 512 KB) to re-enable an app-level ceiling. Even when disabled,
+// Vercel's platform request-body limit (~4.5 MB) and the per-IP rate limit still apply.
+const MAX_ANON = process.env.DROP_MANAGED_MAX_BYTES ? Number(process.env.DROP_MANAGED_MAX_BYTES) : Infinity;
+// Per-hosted-drop cap, env-tunable. NOTE: this path is a serverless function, so Vercel's
+// platform request-body limit (~4.5 MB) is the real ceiling regardless of this value —
+// for larger content, self-host (direct-to-Blob, uncapped), which is what files/sites use.
+const MAX_HOSTED = process.env.DROP_HOSTED_MAX_BYTES ? Number(process.env.DROP_HOSTED_MAX_BYTES) : 100 * 1024 * 1024; // 100 MB
 const ALPH = "23456789abcdefghjkmnpqrstuvwxyz";
 
 // Per-plan ceilings for the hosted tier (count of live sites + total bytes).
 const PLAN = {
-  free: { sites: 100, bytes: 100 * 1024 * 1024 },
+  free: { sites: 100, bytes: 5 * 1024 * 1024 * 1024 }, // 5 GB total — raised from 100 MB to not block dogfooding
   pro:  { sites: 100000, bytes: 5 * 1024 * 1024 * 1024 },
 };
 
@@ -125,6 +133,25 @@ export default async function handler(req, res) {
       slug, handle: user.handle, user_id: user.user_id, blob_key: blobKey,
       content_type: ct, size_bytes: body.length, locked, expires_at: null, email_gate: emailGate,
     }, { onConflict: "handle,slug" });
+    await alias(user.user_id, installId(req));
+    await capture({
+      distinctId: user.user_id,
+      event: "drop_published",
+      properties: {
+        slug,
+        handle: user.handle,
+        tier: "hosted",
+        is_new: isNew,
+        size_bytes: body.length,
+        content_type: ct,
+        locked,
+        email_gate: !!emailGate,
+        plan: prof?.plan || "free",
+        ...reqProps(req),
+        $set: { handle: user.handle, plan: prof?.plan || "free" },
+        $set_once: { first_drop_at: new Date().toISOString() },
+      },
+    });
     return res.status(200).json({ url: `https://${host}/${user.handle}/${slug}`, slug, handle: user.handle, hosted: true, email_gate: emailGate });
   }
 
@@ -134,6 +161,11 @@ export default async function handler(req, res) {
     const slug = `burn-${slugId(8)}`;
     const { error } = await admin().from("burn_drops").insert({ slug, content: body.toString("utf8"), content_type: ct });
     if (error) return res.status(502).json({ error: "could not create burn drop" });
+    await capture({
+      distinctId: installId(req) || slug,
+      event: "drop_published",
+      properties: { slug, tier: "burn", size_bytes: body.length, content_type: ct, ...reqProps(req) },
+    });
     return res.status(200).json({ url: `https://${host}/u/${slug}`, slug, burn: true });
   }
 
@@ -144,5 +176,10 @@ export default async function handler(req, res) {
   } catch {
     return res.status(502).json({ error: "upload failed" });
   }
+  await capture({
+    distinctId: installId(req) || slug,
+    event: "drop_published",
+    properties: { slug, tier: "anon", size_bytes: body.length, content_type: ct, ...reqProps(req) },
+  });
   return res.status(200).json({ url: `https://${host}/${slug}`, slug, expires: "24h" });
 }

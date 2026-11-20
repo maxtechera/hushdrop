@@ -9,6 +9,7 @@
 import { del } from "@vercel/blob";
 import { admin, userFromKey } from "./_lib/supabase.mjs";
 import { bearer } from "./_lib/keys.mjs";
+import { capture, reqProps } from "./_posthog.mjs";
 
 export default async function handler(req, res) {
   const user = await userFromKey(bearer(req));
@@ -52,6 +53,7 @@ export default async function handler(req, res) {
       .select("slug").maybeSingle();
     if (error) return res.status(500).json({ error: "update failed" });
     if (!data) return res.status(404).json({ error: "not found" });
+    await capture({ distinctId: user.user_id, event: "drop_settings_changed", properties: { slug, fields: Object.keys(patch), ...patch, ...reqProps(req) } });
     return res.status(200).json({ slug, ...patch });
   }
 
@@ -68,6 +70,7 @@ export default async function handler(req, res) {
     const token = process.env.BLOB_READ_WRITE_TOKEN;
     try { await del(row.blob_key, { token }); } catch {}
     await db.from("sites").delete().eq("user_id", user.user_id).eq("slug", slug);
+    await capture({ distinctId: user.user_id, event: "drop_deleted", properties: { slug, handle: user.handle, ...reqProps(req) } });
     return res.status(200).json({ removed: slug });
   }
 

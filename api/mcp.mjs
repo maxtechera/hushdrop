@@ -32,6 +32,7 @@ function buildServer() {
             "content-type": "text/html; charset=utf-8",
             "x-drop-content-type": "text/html; charset=utf-8",
             "x-drop-brand": "1",
+            "x-drop-client": "mcp",
           },
           body: html,
         });
