@@ -73,7 +73,7 @@ this file instead.
 Use this only when remote OAuth is not available in the client. It needs Node.js 18 or newer.
 
 1. Sign the user in once from a terminal: `npx -y hushdrop login`
-   (passwordless: GitHub or an email magic link).
+   (passwordless: an email magic link).
 2. Add this entry to `cline_mcp_settings.json` instead of the remote one:
 
 ```json
