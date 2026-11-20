@@ -13,7 +13,7 @@ focusing on what is best for the community. Unacceptable behavior includes haras
 insulting comments, and publishing others' private information.
 
 ## Enforcement
-Instances of abusive behavior may be reported to the maintainer at **maxi.techerag@gmail.com**.
+Instances of abusive behavior may be reported to the maintainer at **support@hushdrop.dev**.
 All complaints will be reviewed and investigated promptly and fairly.
 
 This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org),
