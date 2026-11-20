@@ -21,7 +21,12 @@ jobs:
           node --check skill/install.mjs
           node --check middleware.js
           for f in $(find api -name '*.mjs'); do node --check "$f"; done
+      - name: Originality (no 8-word runs copied from competitor pages)
+        if: hashFiles('scripts/originality.mjs') != ''
+        run: node scripts/originality.mjs check
       - name: Generated site is in sync
+        # The public OSS export has no marketing site (no skill/gen-site.mjs), so skip it there.
+        if: hashFiles('skill/gen-site.mjs') != ''
         run: |
           node skill/gen-site.mjs
           git diff --exit-code -- '*.html' sitemap.xml llms.txt || (echo "::error::Run 'node skill/gen-site.mjs' and commit the result" && exit 1)
