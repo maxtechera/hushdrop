@@ -6,8 +6,8 @@ Follow them in order. Nothing needs to be installed for the main path.
 ## What you are connecting
 
 hushdrop is a remote MCP server at `https://hushdrop.dev/mcp` (Streamable HTTP). After the user
-signs in, it gives you 49 tools for turning what you build into private links: publish an HTML
-page or a file, update a drop in place, set or change its password, set an expiry, restrict it to
+signs in, it gives you tools for turning what you build into private links: publish an HTML
+page or a file, update a drop in place, set or change its password, restrict it to
 an email domain, add editors, list and roll back versions, and share into team spaces.
 
 Drops are password-protected by default. When you publish, always give the user both the URL and
