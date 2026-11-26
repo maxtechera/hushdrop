@@ -2,69 +2,37 @@
 
 # Hushdrop
 
-**Share what your AI builds — on your own domain.**
+**Share what your AI builds.**
 
-Open-source, self-hosted artifact sharing. Drop a file, an HTML page, or a whole site and get a
-branded, **password-protected (zero-knowledge AES-256)** link on **your own domain** in ~1 second —
-from your terminal or any AI agent. The open-source alternative to Stacktree.
+Ask your agent for a report, dashboard or prototype and say "share this". It publishes the page behind a
+password and gives you the link. Whoever gets it needs a browser and the password, and no account.
 
-[![npm](https://img.shields.io/npm/v/hushdrop?color=ff6b35)](https://www.npmjs.com/package/hushdrop)
-[![downloads](https://img.shields.io/npm/dm/hushdrop?color=ff6b35)](https://www.npmjs.com/package/hushdrop)
+[![maxtechera/hushdrop MCP server](https://glama.ai/mcp/servers/maxtechera/hushdrop/badges/score.svg)](https://glama.ai/mcp/servers/maxtechera/hushdrop)
 [![CI](https://github.com/maxtechera/hushdrop/actions/workflows/ci.yml/badge.svg)](https://github.com/maxtechera/hushdrop/actions/workflows/ci.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![stars](https://img.shields.io/github/stars/maxtechera/hushdrop?style=social)](https://github.com/maxtechera/hushdrop/stargazers)
 
-[**Live demo →**](https://hushdrop.dev) · [Docs](https://hushdrop.dev/docs) · [Try in browser](https://hushdrop.dev/try) · [vs Stacktree](https://hushdrop.dev/stacktree-alternative)
+[**Add to Claude**](https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=Hushdrop&connectorUrl=https%3A%2F%2Fhushdrop.dev%2Fmcp) · [**Add to ChatGPT**](https://hushdrop.dev/claude-ai-connector#add-the-connector) · [Website](https://hushdrop.dev) · [Docs](https://hushdrop.dev/docs)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmaxtechera%2Fhushdrop&stores=%5B%7B%22type%22%3A%22blob%22%7D%5D)
-
-![Hushdrop — share what your AI builds, on your own domain](docs/og.png)
+![Hushdrop: share what your AI builds](https://hushdrop.dev/_brand/og.png)
 
 </div>
 
 ---
 
-## Quick start
+## Connect your agent
 
-The core way to use Hushdrop is **from your agent** — it publishes what it builds to your own domain.
+| Agent | How |
+|---|---|
+| **Claude** | [Add to Claude](https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=Hushdrop&connectorUrl=https%3A%2F%2Fhushdrop.dev%2Fmcp) opens with everything filled in. Click Add, then sign in. |
+| **ChatGPT** | [Three short steps](https://hushdrop.dev/claude-ai-connector#add-the-connector), with the address ready to copy. |
+| **Anything else** | Paste this to your agent: *Read https://hushdrop.dev/agent.txt and share this page as a private link.* |
 
-**Claude Code** (recommended — auto-updates via the plugin marketplace):
+The server is `https://hushdrop.dev/mcp` (Streamable HTTP, OAuth). Sign-in is free.
 
-```bash
-/plugin marketplace add maxtechera/hushdrop
-/plugin install hushdrop
-```
+Once it's connected, the agent can publish pages with a password, update them at the same address, list and
+restore earlier versions, tell you whether a page was opened, and share into team spaces.
 
-**Cursor · Codex · Copilot · Gemini · 20+ Agent Skills hosts:**
-
-```bash
-npx skills add maxtechera/hushdrop-skill
-```
-
-**No install** — open **[hushdrop.dev/try](https://hushdrop.dev/try)**, drop an HTML file, get a link. No account.
-
-**One-off from the terminal** — zero install, zero setup, no account:
-
-```bash
-npx hushdrop report.html       # → https://hushdrop.dev/u/xxxx (+ password, copied) — no setup, no account
-```
-
-**Free hosted account** — persistent links on your own handle (`hushdrop.dev/you/<slug>`):
-
-```bash
-npx hushdrop login                       # passwordless: GitHub or magic link
-npx hushdrop report.html                 # → https://hushdrop.dev/you/report-a1b2 (persistent)
-```
-
-**Your own domain** — self-host on your Vercel Blob (free, MIT, your URL + brand forever):
-
-```bash
-# one-click: the "Deploy with Vercel" button above auto-provisions a Blob store — then:
-npx hushdrop-install                         # wire your agents + CLI
-hush deploy --domain share.yoursite.com   # or do it from a local clone
-```
-
-No dashboard required. Two commands to try; one more to own.
+Prefer to run it yourself? See [Self-host](#self-host) and the [CLI reference](#cli-reference).
 
 ## Why this exists
 
@@ -96,8 +64,7 @@ Full write-ups: [vs Stacktree](https://hushdrop.dev/stacktree-alternative) · [v
 
 - 🔒 **Zero-knowledge** — branding + AES-256 happen client-side; the server only stores ciphertext.
 - 🌐 **Your domain, your brand** — colors, logo, social cards flow into the unlock gate + previews.
-- 🤖 **Agent-native** — one CLI command or 9 MCP tools; any agent that runs a shell can publish.
-- ⏱️ **Auto-expire & burn-after-read** — `--expire 7d`, `--burn`, server-enforced cleanup.
+- 🤖 **Agent-native** — a remote MCP server for Claude, ChatGPT and other MCP clients.
 - 📧 **Email-gate & revocable share links** — restrict by domain, mint/revoke guest links.
 - 📦 **Whole static sites** — drop a folder or zip (`hush ./dist`, `hush site.zip`) → a multi-file site at `/<slug>/`, optionally behind one password. Plus single HTML, Markdown, PDFs, images.
 - 🚀 **One-click self-host** — Deploy to Vercel auto-provisions Blob; no DB to run.
@@ -133,7 +100,20 @@ Full write-ups: [vs Stacktree](https://hushdrop.dev/stacktree-alternative) · [v
 
 ## Use it from any AI agent
 
-`npx hushdrop-install` registers the **`drops` MCP server** into your detected agents (Claude Code, Codex,
+**Remote MCP (recommended).** Connect `https://hushdrop.dev/mcp` in any client that supports remote MCP servers. Nothing to install; the first call opens a free sign-in (OAuth), then the agent can publish (password-protected by default), restore versions, add editors, share into teams, upload files and read view stats.
+
+```bash
+claude mcp add --transport http hushdrop https://hushdrop.dev/mcp   # Claude Code
+codex mcp add hushdrop --url https://hushdrop.dev/mcp && codex mcp login hushdrop
+```
+```jsonc
+// Cursor, Windsurf, VS Code; claude.ai / ChatGPT: Settings → Connectors → add the URL
+{ "mcpServers": { "hushdrop": { "url": "https://hushdrop.dev/mcp" } } }
+```
+
+The remote server locks pages on Hushdrop's side before storing them. For zero-knowledge (encrypted on your machine) or your own domain, use the local server below.
+
+**Local MCP server.** `npx hushdrop-install` registers the **`drops` MCP server** into your detected agents (Claude Code, Codex,
 Cursor, Windsurf, OpenCode, Amp), puts `hush` on your `PATH`, and prints config for GUI clients.
 
 ```bash
@@ -144,7 +124,7 @@ codex  mcp add hushdrop -- npx -y hushdrop-mcp         # Codex
 { "mcpServers": { "hushdrop": { "command": "npx", "args": ["-y", "hushdrop-mcp"] } } }
 ```
 
-### MCP tools (9 — vs Stacktree's 7)
+### Local MCP tools
 
 | Tool | Purpose |
 |------|---------|
